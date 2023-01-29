@@ -2,9 +2,8 @@ from transformers import Trainer, TrainingArguments, AutoModelForCausalLM, AutoM
 from dataset.dataset import EOSSplitTextDataset
 from omegaconf import OmegaConf
 import os
-import math
 import shutil
-from utils_v2 import get_result_dir, on_after_train
+from utils_v2 import get_result_dir, on_after_train, is_main_process
 
 set_seed(365)
 
@@ -49,9 +48,10 @@ if __name__ == '__main__':
     print(f'Config {conf_file}')
     conf = OmegaConf.load(conf_file)
     result_dir = get_result_dir()
-    print('Creating: ', result_dir)
-    os.makedirs(result_dir, exist_ok=False)
-    shutil.copy(conf_file, f'{result_dir}/config.yaml')
+    if is_main_process():
+        print('Creating: ', result_dir)
+        os.makedirs(result_dir, exist_ok=False)
+        shutil.copy(conf_file, f'{result_dir}/config.yaml')
     trainer = CustomTrainer(conf, result_dir)
     train_result = trainer.train()
     trainer.save_model()

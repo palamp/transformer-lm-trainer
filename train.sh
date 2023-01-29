@@ -1,2 +1,2 @@
-# deepspeed --num_gpus=1 trainer.py --deepspeed config/ds_config.json
-python trainer.py
+deepspeed --num_gpus=2 trainer.py --deepspeed config/ds_config.json
+# python trainer.py

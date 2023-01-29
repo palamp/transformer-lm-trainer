@@ -1,5 +1,6 @@
 import glob
 import math
+import os
 
 
 def get_result_dir(lightning_logs_dir='results'):
@@ -26,3 +27,8 @@ def on_after_train(trainer, train_result):
     metrics["perplexity"] = perplexity
     trainer.log_metrics("eval", metrics)
     trainer.save_metrics("eval", metrics)
+
+
+def is_main_process():
+    env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
+    return env_local_rank == 0 or env_local_rank == -1

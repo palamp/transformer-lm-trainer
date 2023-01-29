@@ -31,6 +31,7 @@ class EOSSplitTextDataset(Dataset):
 
     def __getitem__(self, idx):
         text = self.entries[idx]
+        text = text + '<|endoftext|><|endoftext|>'
         if self.arch == 'clm':
             tokens = self.tokenizer.encode_plus(
                 text, padding='max_length', max_length=self.max_length, return_tensors='pt', return_attention_mask=True, truncation=True)
