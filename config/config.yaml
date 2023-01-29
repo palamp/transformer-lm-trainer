@@ -1,0 +1,19 @@
+data:
+  train_path: /home/kunato/language-model-agents/training_scripts/rallio67_inst_train_v1_chat
+  test_path: /home/kunato/language-model-agents/training_scripts/rallio67_inst_eval_v1_chat
+  
+training_args:
+  fp16: True
+  num_train_epochs: 1
+  eval_steps: 200
+  save_steps: 1000
+  gradient_accumulation_steps: 2
+  per_device_train_batch_size: 32
+  warmup_steps: 5
+
+
+model_name: EleutherAI/pythia-160m
+
+gpus: 1
+
+lr: 6e-6
