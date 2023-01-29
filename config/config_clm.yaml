@@ -7,13 +7,12 @@ training_args:
   num_train_epochs: 1
   eval_steps: 200
   save_steps: 1000
-  gradient_accumulation_steps: 2
+  gradient_accumulation_steps: 1
   per_device_train_batch_size: 32
   warmup_steps: 5
+  deepspeed: 'config/ds_config.json' # need to run using deepspeed
 
 
-model_name: EleutherAI/pythia-160m
-
-gpus: 1
+model_name: EleutherAI/pythia-1.4b-deduped
 
 lr: 6e-6
