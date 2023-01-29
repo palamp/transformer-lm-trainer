@@ -1,6 +1,6 @@
 data:
-  train_path: /home/kunato/language-model-agents/training_scripts/rallio67_inst_train_v1_chat
-  test_path: /home/kunato/language-model-agents/training_scripts/rallio67_inst_eval_v1_chat
+  train_path: /home/kunato/language-model-agents/inst_clean_v3_train.txt
+  test_path: /home/kunato/language-model-agents/inst_clean_v3_test.txt
   
 training_args:
   fp16: True
