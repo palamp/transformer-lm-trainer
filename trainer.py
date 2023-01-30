@@ -53,7 +53,7 @@ class CustomTrainer(Trainer):
 
 
 if __name__ == '__main__':
-    conf_file = 'config/config_clm.yaml'
+    conf_file = 'config/config_encdec.yaml'
     print(f'Config {conf_file}')
     conf = OmegaConf.load(conf_file)
     result_dir = get_result_dir()
@@ -64,4 +64,4 @@ if __name__ == '__main__':
     trainer = CustomTrainer(conf, result_dir)
     train_result = trainer.train()
     trainer.save_model()
-    on_after_train(train_result, trainer)
+    on_after_train(trainer, train_result)
