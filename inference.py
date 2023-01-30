@@ -1,18 +1,18 @@
 # %%
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModelForSeq2SeqLM
 import torch
 from time import sleep
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 print('loading model')
-model_name = 'results/005'
+model_name = 'results/006'
 device = torch.device('cuda:0')
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 # TODO custom model based on v2 need this
 # tokenizer.pad_token_id = '1'
-model = AutoModelForCausalLM.from_pretrained(model_name).to(device)
-
+# model = AutoModelForCausalLM.from_pretrained(model_name).to(device)
+model = AutoModelForSeq2SeqLM.from_pretrained(model_name).to(device)
 print('loaded')
 
 # %%
@@ -42,7 +42,7 @@ while(True):
     decode_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
     # print('decode', decode_text)
     decode_text = decode_text.replace(text, '').split('User')[0]
-    print('BOT', decode_text)
+    print('BOT:', decode_text)
     text = text + decode_text
 
 # %%

@@ -1,12 +1,13 @@
 data:
-  train_path: /home/kunato/language-model-agents/inst_clean_v3_train.txt
-  test_path: /home/kunato/language-model-agents/inst_clean_v3_test.txt
+  train_path: /home/kunato/language-model-agents/inst_v1_train.txt
+  test_path: /home/kunato/language-model-agents/inst_v1_test.txt
   config:
-    split_kw: 'Rosey:'
+    split_kw: '\n\n'
 
 training_args:
   bf16: True
   num_train_epochs: 1
+  logging_steps: 100
   eval_steps: 200
   save_steps: 1000
   gradient_accumulation_steps: 1

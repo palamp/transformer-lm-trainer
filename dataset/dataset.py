@@ -27,23 +27,15 @@ class EOSSplitTextDataset(Dataset):
     # based on rallio code
     def _filter_entries(self, entries):
         fixed = []
-        for i in entries:
-            if i.strip() == '':
+        for ent in entries:
+            if ent.strip() == '':
                 continue
-            new_line = ""
-            if i[-1] == "\n" and i[0] == "\n":
-                new_line = i[1:-1]
-            elif i[0] == "\n":
-                new_line = i[1:]
-            elif i[-1] == "\n":
-                new_line = i[:-1]
-            if len(new_line) > 5:
-                fixed.append(new_line)
-            else:
-                fixed.append(i)
+            ent = ent.strip('\n')
+            fixed.append(ent)
         results = []
         for ent in tqdm(fixed):
-            ent = ent + '<|endoftext|><|endoftext|>'
+            ent = ent + \
+                f'{self.tokenizer.eos_token}{self.tokenizer.eos_token}'
             tokens = self.tokenizer.encode(ent)
             if len(tokens) < self.max_length:
                 results.append(ent)
@@ -72,7 +64,6 @@ class EOSSplitTextDataset(Dataset):
                 split_idx = random.randint(1, len(text) - 1)
                 inputs = text[:split_idx]
                 labels = text[split_idx:]
-
             inputs_tokens = self.tokenizer.encode_plus(
                 inputs, padding='max_length', max_length=self.max_length, return_tensors='pt', return_attention_mask=True, truncation=True)
             labels_tokens = self.tokenizer.encode_plus(
@@ -91,11 +82,11 @@ if __name__ == '__main__':
     from torch.utils.data import DataLoader
     import torch
     dataset = EOSSplitTextDataset(
-        '/home/kunato/language-model-agents/inst_v1_test.txt', 'EleutherAI/pythia-160m')
+        '/home/kunato/language-model-agents/inst_v1_test.txt', 'google/mt5-large', arch='prefix_lm', split_kw='\n\n')
     loader = DataLoader(dataset, shuffle=False)
     print('total', len(dataset))
-    # for b in loader:
-    #     print(b)
-    #     print(b['input_ids'].sum())
-    #     print(torch.count_nonzero(b['attention_mask']))
-    #     break
+    for b in loader:
+        print(b)
+        print(b['input_ids'].sum())
+        print(torch.count_nonzero(b['attention_mask']))
+        break
