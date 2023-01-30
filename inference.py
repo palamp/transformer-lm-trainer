@@ -6,11 +6,12 @@ import os
 os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 print('loading model')
-model_name = 'results/002'
+model_name = 'results/005'
+device = torch.device('cuda:0')
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 # TODO custom model based on v2 need this
 # tokenizer.pad_token_id = '1'
-model = AutoModelForCausalLM.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name).to(device)
 
 print('loaded')
 
@@ -28,7 +29,7 @@ while(True):
     # I'd like to watch some comedy movies this weekend. Could you recommend a few good ones from the last 20 years?
     # Are generic brand crocs manufactured in the same location as name brand crocs?
     text = text + "User:" + input_text + "Rosey:"
-    inputs = tokenizer.encode(text, return_tensors="pt")
+    inputs = tokenizer.encode(text, return_tensors="pt").to(device)
     outputs = model.generate(inputs,
                              no_repeat_ngram_size=4,
                              do_sample=True,

@@ -18,7 +18,6 @@ class EOSSplitTextDataset(Dataset):
         self.arch = arch
         with open(text_file) as f:
             data = f.read()
-
         if self.arch == 'prefix_lm':
             self.split_kw = split_kw
 
@@ -44,9 +43,9 @@ class EOSSplitTextDataset(Dataset):
                 fixed.append(i)
         results = []
         for ent in tqdm(fixed):
-            tokens = self.tokenizer.encode(
-                ent, return_tensors='pt')
-            if tokens.shape[-1] < self.max_length:
+            ent = ent + '<|endoftext|><|endoftext|>'
+            tokens = self.tokenizer.encode(ent)
+            if len(tokens) < self.max_length:
                 results.append(ent)
         print('total', len(results))
         return results
@@ -62,7 +61,6 @@ class EOSSplitTextDataset(Dataset):
 
     def __getitem__(self, idx):
         text = self.entries[idx]
-        text = text + '<|endoftext|><|endoftext|>'
         if self.arch == 'clm':
             tokens = self.tokenizer.encode_plus(
                 text, padding='max_length', max_length=self.max_length, return_tensors='pt', return_attention_mask=True, truncation=True)
@@ -93,10 +91,11 @@ if __name__ == '__main__':
     from torch.utils.data import DataLoader
     import torch
     dataset = EOSSplitTextDataset(
-        '/home/kunato/language-model-agents/inst_clean_v3_test.txt', 'EleutherAI/pythia-160m')
+        '/home/kunato/language-model-agents/inst_v1_test.txt', 'EleutherAI/pythia-160m')
     loader = DataLoader(dataset, shuffle=False)
-    for b in loader:
-        print(b)
-        print(b['input_ids'].sum())
-        print(torch.count_nonzero(b['attention_mask']))
-        break
+    print('total', len(dataset))
+    # for b in loader:
+    #     print(b)
+    #     print(b['input_ids'].sum())
+    #     print(torch.count_nonzero(b['attention_mask']))
+    #     break

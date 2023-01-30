@@ -5,6 +5,7 @@ data:
 training_args:
   fp16: True
   num_train_epochs: 1
+  logging_steps: 100
   eval_steps: 200
   save_steps: 1000
   gradient_accumulation_steps: 1
