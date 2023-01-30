@@ -20,4 +20,4 @@ tokenizer_name: google/mt5-large
 
 gpus: 1
 
-lr: 6e-6
+lr: 5e-4
