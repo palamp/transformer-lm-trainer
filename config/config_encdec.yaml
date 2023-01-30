@@ -15,7 +15,8 @@ training_args:
   deepspeed: 'config/ds_b16_config.json' # need to run using deepspeed
 
 
-model_name: google/mt5-large
+model_name: /home/kunato/instruct-transformer/pretrained/mt5_lm
+tokenizer_name: google/mt5-large
 
 gpus: 1
 

@@ -29,12 +29,13 @@ class CustomTrainer(Trainer):
             print(f'Total train param: {total_train_params:,}')
         self._set_tokenizer()
         training_args = TrainingArguments(
-            do_train=True, do_eval=True, evaluation_strategy='steps', output_dir=result_dir, dataloader_num_workers=0, **self.config.training_args)
+            do_train=True, do_eval=True, evaluation_strategy='steps', output_dir=result_dir, dataloader_num_workers=0, learning_rate=self.config.lr, **self.config.training_args)
         super().__init__(self.model, training_args, default_data_collator, self._get_train_dataset(),
                          self._get_eval_dataset(), self.tokenizer, **config.get('trainer_args', {}))
 
     def _set_tokenizer(self):
-        self.tokenizer = AutoTokenizer.from_pretrained(self.config.model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            self.config.get('tokenizer_name', self.config.model_name))
         if 'pythia' in self.config.model_name:
             # neox / decoder only doesnt' have pad token id, but there are in vocab, but not used
             self.tokenizer.pad_token_id = 1
