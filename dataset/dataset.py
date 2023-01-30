@@ -2,6 +2,7 @@ from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizer
 from typing import Optional
 import random
+from tqdm import tqdm
 
 
 class EOSSplitTextDataset(Dataset):
@@ -18,7 +19,33 @@ class EOSSplitTextDataset(Dataset):
             self.split_kw = split_kw
 
         entries = data.split("<|endoftext|>")
-        self.entries = entries
+        self.entries = self._filter_entries(entries)
+
+    # based on rallio code
+    def _filter_entries(self, entries):
+        fixed = []
+        for i in entries:
+            if i.strip() == '':
+                continue
+            new_line = ""
+            if i[-1] == "\n" and i[0] == "\n":
+                new_line = i[1:-1]
+            elif i[0] == "\n":
+                new_line = i[1:]
+            elif i[-1] == "\n":
+                new_line = i[:-1]
+            if len(new_line) > 5:
+                fixed.append(new_line)
+            else:
+                fixed.append(i)
+        results = []
+        for ent in tqdm(fixed):
+            tokens = self.tokenizer.encode(
+                ent, return_tensors='pt')
+            if tokens.shape[-1] < self.max_length:
+                results.append(ent)
+        print('total', len(results))
+        return results
 
     def __len__(self):
         return len(self.entries)
@@ -63,8 +90,9 @@ if __name__ == '__main__':
     tokz = AutoTokenizer.from_pretrained('EleutherAI/pythia-160m')
     tokz.pad_token_id = 1
     dataset = EOSSplitTextDataset(
-        '/home/kunato/language-model-agents/inst_clean_v3.txt', tokz, arch='prefix_lm')
-    loader = DataLoader(dataset)
+        '/home/kunato/language-model-agents/inst_clean_v3_test.txt', tokz)
+    loader = DataLoader(dataset, shuffle=False)
     for b in loader:
         print(b)
+        print(b['input_ids'].shape)
         break

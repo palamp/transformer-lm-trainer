@@ -15,4 +15,4 @@ training_args:
 
 model_name: EleutherAI/pythia-1.4b-deduped
 
-lr: 6e-6
+lr: 5e-6

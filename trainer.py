@@ -4,7 +4,7 @@ from omegaconf import OmegaConf
 import os
 import shutil
 from utils_v2 import get_result_dir, on_after_train, is_main_process
-
+os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 set_seed(365)
 
 
@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     conf_file = args.config
-    
+
     print(f'Config {conf_file}')
     conf = OmegaConf.load(conf_file)
     result_dir = get_result_dir()
