@@ -14,6 +14,7 @@ training_args:
   deepspeed: 'config/ds_config.json' # need to run using deepspeed
 
 
-model_name: EleutherAI/pythia-1.4b-deduped
+# model_name: EleutherAI/pythia-1.4b-deduped
+model_name: sberbank-ai/mGPT
 
 lr: 5e-6

@@ -23,7 +23,6 @@ class CustomTrainer(Trainer):
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.config.model_name, config=model_config)
         self._set_tokenizer()
-        self.model.resize_token_embeddings(len(self.tokenizer))
 
         if is_main_process():
             total_train_params = sum(p.numel()

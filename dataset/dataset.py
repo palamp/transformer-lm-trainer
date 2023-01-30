@@ -11,9 +11,11 @@ class EOSSplitTextDataset(Dataset):
         super().__init__()
         self.max_length = max_length
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
-        if 'pythia' in tokenizer_name:
+        if 'pythia' in tokenizer_name or 'gpt' in tokenizer_name:
             print('set pad_token_id 1')
             self.tokenizer.pad_token = '<|padding|>'
+        elif "mGPT" in tokenizer_name:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
         print('self.tokenizer.pad_token_id', self.tokenizer.pad_token_id)
         self.arch = arch
         with open(text_file) as f:
@@ -82,7 +84,7 @@ if __name__ == '__main__':
     from torch.utils.data import DataLoader
     import torch
     dataset = EOSSplitTextDataset(
-        '/home/kunato/language-model-agents/inst_v1_test.txt', 'google/mt5-large', arch='prefix_lm', split_kw='\n\n')
+        '/home/kunato/language-model-agents/inst_v1_test.txt', 'sberbank-ai/mGPT', arch='clm')
     loader = DataLoader(dataset, shuffle=False)
     print('total', len(dataset))
     for b in loader:
