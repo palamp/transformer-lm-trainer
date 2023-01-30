@@ -1,5 +1,5 @@
 from torch.utils.data import Dataset
-from transformers import PreTrainedTokenizer
+from transformers import AutoTokenizer
 from typing import Optional
 import random
 from tqdm import tqdm
@@ -7,10 +7,14 @@ from tqdm import tqdm
 
 class EOSSplitTextDataset(Dataset):
 
-    def __init__(self, text_file: str, tokenizer: PreTrainedTokenizer, max_length=280, arch='clm', split_kw: Optional[str] = None) -> None:
+    def __init__(self, text_file: str, tokenizer_name: str, max_length=280, arch='clm', split_kw: Optional[str] = None) -> None:
         super().__init__()
         self.max_length = max_length
-        self.tokenizer = tokenizer
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+        if 'pythia' in tokenizer_name:
+            print('set pad_token_id 1')
+            self.tokenizer.pad_token = '<|padding|>'
+        print('self.tokenizer.pad_token_id', self.tokenizer.pad_token_id)
         self.arch = arch
         with open(text_file) as f:
             data = f.read()
@@ -87,12 +91,12 @@ class EOSSplitTextDataset(Dataset):
 if __name__ == '__main__':
     from transformers import AutoTokenizer
     from torch.utils.data import DataLoader
-    tokz = AutoTokenizer.from_pretrained('EleutherAI/pythia-160m')
-    tokz.pad_token_id = 1
+    import torch
     dataset = EOSSplitTextDataset(
-        '/home/kunato/language-model-agents/inst_clean_v3_test.txt', tokz)
+        '/home/kunato/language-model-agents/inst_clean_v3_test.txt', 'EleutherAI/pythia-160m')
     loader = DataLoader(dataset, shuffle=False)
     for b in loader:
         print(b)
-        print(b['input_ids'].shape)
+        print(b['input_ids'].sum())
+        print(torch.count_nonzero(b['attention_mask']))
         break

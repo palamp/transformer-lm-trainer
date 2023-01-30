@@ -6,12 +6,11 @@ import os
 os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 print('loading model')
-model_name = 'results/001'
+model_name = 'results/002'
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 # TODO custom model based on v2 need this
 # tokenizer.pad_token_id = '1'
-model = AutoModelForCausalLM.from_pretrained(
-    model_name, torch_dtype=torch.bfloat16).to('cuda')
+model = AutoModelForCausalLM.from_pretrained(model_name)
 
 print('loaded')
 
@@ -24,11 +23,12 @@ while(True):
         text = ''
         continue
     print('User: ', input_text)
+    # write a short story about an elf maiden named Julia who goes on an adventure with a warrior named Rallio. The two of them have to go through many trials and tribulations in order for the tale to end happily ever after. Tell the story from Rallio's point of view.
+    # Why don't cats and dogs get along?
+    # I'd like to watch some comedy movies this weekend. Could you recommend a few good ones from the last 20 years?
     # Are generic brand crocs manufactured in the same location as name brand crocs?
     text = text + "User:" + input_text + "Rosey:"
-    inputs = tokenizer.encode(text, return_tensors="pt").to("cuda")
-    with open('input.txt', 'w') as w:
-        w.write(text)
+    inputs = tokenizer.encode(text, return_tensors="pt")
     outputs = model.generate(inputs,
                              no_repeat_ngram_size=4,
                              do_sample=True,
@@ -40,8 +40,7 @@ while(True):
                              penalty_alpha=0.6)
     decode_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
     # print('decode', decode_text)
-    decode_text = decode_text.replace(text, '').split('User')[
-        0]
+    decode_text = decode_text.replace(text, '').split('User')[0]
     print('BOT', decode_text)
     text = text + decode_text
 

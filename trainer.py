@@ -5,7 +5,7 @@ import os
 import shutil
 from utils_v2 import get_result_dir, on_after_train, is_main_process
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
-set_seed(365)
+set_seed(42)
 
 
 class CustomTrainer(Trainer):
@@ -22,12 +22,13 @@ class CustomTrainer(Trainer):
         else:
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.config.model_name, config=model_config)
+        self._set_tokenizer()
+        self.model.resize_token_embeddings(len(self.tokenizer))
+
         if is_main_process():
-            # print(self.model)
             total_train_params = sum(p.numel()
                                      for p in self.model.parameters() if p.requires_grad)
             print(f'Total train param: {total_train_params:,}')
-        self._set_tokenizer()
         training_args = TrainingArguments(
             do_train=True, do_eval=True, evaluation_strategy='steps', output_dir=result_dir, dataloader_num_workers=0, learning_rate=self.config.lr, **self.config.training_args)
         super().__init__(self.model, training_args, default_data_collator, self._get_train_dataset(),
@@ -36,20 +37,17 @@ class CustomTrainer(Trainer):
     def _set_tokenizer(self):
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.config.get('tokenizer_name', self.config.model_name))
-        if 'pythia' in self.config.model_name:
-            # neox / decoder only doesnt' have pad token id, but there are in vocab, but not used
-            self.tokenizer.pad_token_id = 1
 
     def _get_train_dataset(self):
         data_config = self.config.data
         train_dataset = EOSSplitTextDataset(
-            data_config.train_path, self.tokenizer, arch='prefix_lm' if self.is_enc_dec else 'clm', **data_config.get('config', {}))
+            data_config.train_path, tokenizer_name=self.config.get('tokenizer_name', self.config.model_name), arch='prefix_lm' if self.is_enc_dec else 'clm', **data_config.get('config', {}))
         return train_dataset
 
     def _get_eval_dataset(self):
         data_config = self.config.data
         eval_dataset = EOSSplitTextDataset(
-            data_config.test_path, self.tokenizer, arch='prefix_lm' if self.is_enc_dec else 'clm', **data_config.get('config', {}))
+            data_config.test_path, tokenizer_name=self.config.get('tokenizer_name', self.config.model_name), arch='prefix_lm' if self.is_enc_dec else 'clm', **data_config.get('config', {}))
         return eval_dataset
 
 
