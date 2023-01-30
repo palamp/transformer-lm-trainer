@@ -54,11 +54,19 @@ class CustomTrainer(Trainer):
 
 
 if __name__ == '__main__':
-    conf_file = 'config/config_encdec.yaml'
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
+    parser.add_argument('--config', required=True)
+    parser.add_argument('--local_rank', type=int, default=-1,
+                        help='local rank passed from distributed launcher')
+
+    args = parser.parse_args()
+    conf_file = args.config
+    
     print(f'Config {conf_file}')
     conf = OmegaConf.load(conf_file)
     result_dir = get_result_dir()
-    if is_main_process():
+    if is_main_process(args.local_rank):
         print('Creating: ', result_dir)
         os.makedirs(result_dir, exist_ok=False)
         shutil.copy(conf_file, f'{result_dir}/config.yaml')

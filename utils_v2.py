@@ -29,6 +29,7 @@ def on_after_train(trainer, train_result):
     trainer.save_metrics("eval", metrics)
 
 
-def is_main_process():
-    env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
+def is_main_process(env_local_rank=None):
+    if env_local_rank is None:
+        env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
     return env_local_rank == 0 or env_local_rank == -1
