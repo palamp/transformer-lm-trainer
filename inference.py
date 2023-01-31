@@ -36,6 +36,7 @@ class InferenceHandler:
             sleep(1)
             input_text = input()
             if input_text == 'RESET':
+                print("RESET")
                 text = ''
                 continue
             print('User: ', input_text)
