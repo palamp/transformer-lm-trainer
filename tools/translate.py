@@ -75,7 +75,7 @@ def main(text_file: str, out_file: str, model_name="facebook/m2m100_418M", devic
     handler = InferenceHandler(model_name, device=device)
     results = []
     for row in tqdm(entries):
-        if row[0] == 'synth_code':
+        if row[0] == 'synth_code' or row[0] == 'conala':
             continue
         else:
             try:

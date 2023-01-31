@@ -5,8 +5,6 @@ from time import sleep
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
-# %%
-
 
 class InferenceHandler:
 
@@ -54,9 +52,11 @@ class InferenceHandler:
                                           top_p=0.95,
                                           temperature=0.5,
                                           max_new_tokens=128,
-                                          top_k=4,
+                                          #   top_k=4,
                                           repetition_penalty=1.03,
-                                          penalty_alpha=0.6)
+                                          penalty_alpha=0.6,
+                                          eos_token_id=self.tokenizer.eos_token_id
+                                          )
             decode_text = self.tokenizer.decode(
                 outputs[0], skip_special_tokens=True)
             # print('decode', decode_text)
@@ -66,7 +66,6 @@ class InferenceHandler:
 
 
 # %%
-handler = InferenceHandler('results/020')
+handler = InferenceHandler(
+    'results/022', device=torch.device('cuda:0'))
 handler.run_loop()
-
-# %%

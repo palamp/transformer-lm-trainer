@@ -1,6 +1,6 @@
 data:
-  train_path: /home/kunato/language-model-agents/inst_v1_train.txt
-  test_path: /home/kunato/language-model-agents/inst_v1_test.txt
+  train_path: /home/kunato/instruct-transformer/filelist/inst_v1_en_th_train.txt
+  test_path: /home/kunato/instruct-transformer/filelist/inst_v1_en_th_test.txt
   
 training_args:
   fp16: True
