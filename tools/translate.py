@@ -9,9 +9,12 @@ class InferenceHandler:
     def __init__(self, model_name: str, device=torch.device('cpu')) -> None:
         self.device = device
         self.model_name = model_name
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(
+            model_name).to(self.device)
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.model.eval()
 
+    @torch.no_grad()
     def _translate_m2m100(self, en_text):
         self.tokenizer.src_lang = "en"
         tokens = self.tokenizer(en_text, return_tensors="pt").to(self.device)
@@ -21,6 +24,7 @@ class InferenceHandler:
             generated_tokens, skip_special_tokens=True)
         return th_text[0]
 
+    @torch.no_grad()
     def _translate_pipeline(self, en_text):
         translator = pipeline('translation', model=self.model,
                               tokenizer=self.tokenizer, src_lang='eng_Latn', tgt_lang='tha_Thai')
@@ -64,19 +68,25 @@ model_name can be
 """
 
 
-def main(text_file: str, model_name="facebook/m2m100_418M", device=torch.device('cpu')):
-
+def main(text_file: str, out_file: str, model_name="facebook/m2m100_418M", device=torch.device('cpu')):
+    from tqdm import tqdm
     with open(text_file) as f:
-        entries = [row[1] for row in json.load(f)]
-
+        entries = json.load(f)
     handler = InferenceHandler(model_name, device=device)
-
-    full_en_text = entries[0]
-
-    print('en_text -> ', full_en_text)
-    full_th_text = handler.translate_doc(full_en_text)
-    print('th_text -> ', full_th_text)
+    results = []
+    for row in tqdm(entries):
+        if row[0] == 'synth_code':
+            continue
+        else:
+            try:
+                full_th_text = handler.translate_doc(row[1])
+                results.append([row[0], full_th_text, row[1]])
+            except Exception as e:
+                print(e)
+    with open(out_file, 'w') as w:
+        json.dump(results, w, ensure_ascii=False)
 
 
 if __name__ == '__main__':
-    main('/home/kunato/language-model-agents/instruction_tuning_dataset_alpha_part1.json')
+    main('/home/kunato/language-model-agents/instruction_tuning_dataset_alpha_part2.json',
+         'instruction_tuning_dataset_alpha_part2_th_418.json', device=torch.device('cuda:0'))
