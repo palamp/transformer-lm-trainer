@@ -52,7 +52,7 @@ class InferenceHandler:
                                           do_sample=True,
                                           top_p=0.95,
                                           temperature=0.5,
-                                          max_length=512,
+                                          max_new_tokens=128,
                                           top_k=4,
                                           repetition_penalty=1.03,
                                           penalty_alpha=0.6)
@@ -65,7 +65,7 @@ class InferenceHandler:
 
 
 # %%
-handler = InferenceHandler('results/011')
+handler = InferenceHandler('results/020')
 handler.run_loop()
 
 # %%

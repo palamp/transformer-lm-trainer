@@ -16,6 +16,8 @@ class EOSSplitTextDataset(Dataset):
             self.tokenizer.pad_token = '<|padding|>'
         elif "mGPT" in tokenizer_name:
             self.tokenizer.pad_token = self.tokenizer.eos_token
+        elif "xglm" in tokenizer_name:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
         print('self.tokenizer.pad_token_id', self.tokenizer.pad_token_id)
         self.arch = arch
         with open(text_file) as f:
@@ -84,7 +86,7 @@ if __name__ == '__main__':
     from torch.utils.data import DataLoader
     import torch
     dataset = EOSSplitTextDataset(
-        '/home/kunato/language-model-agents/inst_v1_test.txt', 'sberbank-ai/mGPT', arch='clm')
+        '/home/kunato/language-model-agents/inst_v1_test.txt', 'facebook/xglm-1.7B', arch='clm')
     loader = DataLoader(dataset, shuffle=False)
     print('total', len(dataset))
     for b in loader:
