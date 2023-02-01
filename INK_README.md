@@ -131,3 +131,29 @@ Do something like train reward model -> train generative -> sample generative ->
 Domain that is good
 -> domain that can mixing with english knowledge (Movie, Hotel?), because english knowledge is very good
 ```
+
+
+### Pretraining
+```
+https://arxiv.org/pdf/2112.00861.pdf (page=28)
+55% heavily
+filtered common crawl data (220B tokens),
+32% internet books (128B tokens)
+OpenWebText, Wikipedia, Stack Exchange, Arxiv, Legal and Patent documents, Ubuntu-IRC
+discussion, and movie scripts, most of which we sourced from The Pile [GBB+20].
+
+finetuned for 100B tokens on a distribution of python code containing about
+45B unique tokens,
+
+AALM layer=64 d=8192 52B flops=1.2e23 <---> GPT-3 flops=3.14e23
+
+They PMP on page=(20, 34)
+They using PM loss + LM loss & train on binary dataset?
+Which can reduce number of fine-tuning pairs into 100 <--> 1,000 (@ 10k with pretrained / without is similar) (difference by difficulty of tasks), but most of them are "ok" at 10k datapoint
+StackExchange: The StackExchange Data Dump17 -> 5.8M training pairs
+REDDIT: Pushshift reddit -> 1.1M training pairs
+Wiki:  -> 1.4 training pairs
+Mix -> 70% StackExchange, ...
+batch-size=32, lr = 0.01 * pretrained_lr
+
+```
