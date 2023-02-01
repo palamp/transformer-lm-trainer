@@ -194,4 +194,9 @@ def calc_loss(n, d):
 # 20B * 400B (optimal for 20B) (gpt-neox should be better)
 # but 12B is almost same as 20B ~?
 # 12B * 300B (pythia) ~ 2.169
+# small model
+# 1.4B * 300B (pythia) ~ 2.33
+# 2.7B * 54B ~ 2.46 (180_000 baht) (much more than pythia)
+# 6.7B * 134B ~ 2.28 (900_000 baht) (little better than pythia)
+# or 2.7B * 134B ~ 2.34 (? 450_000 baht) (same as pythia)
 ```
