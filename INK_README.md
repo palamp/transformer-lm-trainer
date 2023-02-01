@@ -169,3 +169,29 @@ Mix -> 70% StackExchange, ...
 batch-size=32, lr = 0.01 * pretrained_lr
 
 ```
+
+
+### Pretrained target / cost
+```
+def calc_loss(n, d):
+    loss = 1.69 + (406.4 / (pow(n, 0.34))) + (410.7 / (pow(d, 0.27)))
+    return loss
+# ~ optimal point for 20B model
+# n = 23 * 1_000_000_000
+# d = 550 * 1_000_000_000
+# calc_loss(n, d)
+# loss
+# ~ (20 token per params optimal) ratio
+# gpt-3 ~ 2.078
+# anthropiclm (52B * 400B) ~ 2.085
+# baseline (7B model) xglm ~ 2.160363238612205
+# 27B * 540B ~ 2.084 / 26B * 520B ~ 2.088
+# 10B * 205B ~ 2.21
+# gpt-neox -> 20B * 472B ~ 2.10
+# roberta is train on 400B tokens
+# 13B * 260B ~ 2.178 (3_000_000 baht)
+# 6.7B * 134B ~ 2.28 (worse than xglm)
+# 20B * 400B (optimal for 20B) (gpt-neox should be better)
+# but 12B is almost same as 20B ~?
+# 12B * 300B (pythia) ~ 2.169
+```
