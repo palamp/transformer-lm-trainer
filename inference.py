@@ -57,7 +57,7 @@ class InferenceHandler:
                                           top_p=0.95,
                                           temperature=0.5,
                                           max_new_tokens=128,
-                                          #   top_k=4,
+                                          top_k=4,
                                           repetition_penalty=1.03,
                                           penalty_alpha=0.6,
                                           #   eos_token_id=self.tokenizer.eos_token_id
@@ -71,7 +71,7 @@ class InferenceHandler:
 
 # %%
 handler = InferenceHandler(
-    'results/023', device=torch.device('cuda:0'))
+    'results/025', device=torch.device('cuda:0'))
 handler.run_loop()
 
 # %%

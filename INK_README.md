@@ -126,6 +126,18 @@ Do something like train reward model -> train generative -> sample generative ->
 -> next step (train model to predict what sample to be choose / or may be using rule-based / model-based NLU algorithm)
 ```
 
+```
+TH->EN answer
+#### Very good, accurate answer
+Good accurate answer, however may need to repeat the question
+User:  แนะนำโรงแรมในกรุงเทพให้หน่อย
+BOT:  1. The Savoy Hotel Bangkok is a great choice for an elegant stay in the city. 2. Another popular option would be the Renaissance Grand Central Tokyo, which offers modern luxury with stylish decor and excellent service at reasonable prices. 3. If budget isn't your priority but you want to experience some of London’s most iconic landmarks like Buckingham Palace or Tower Bridge then check out the Four Seasons Hotel London St Pancras Airport – it has all that plus free Wi-Fi! 4. For something more affordable yet luxurious try the Mandarin Oriental, offering contemporary design combined with thoughtful amenities such as gourmet dining options
+User:  ขอในกรุงเทพ
+BOT: The Shangri La Hotel, located on Sukhumvit Soi 25, is one of my top recommendations if looking into staying near downtown Bangkok while exploring its vibrant nightlife district. It also features complimentary WiFi throughout each guestroom so no matter what time zone they are in there won't be any lag when accessing their favorite websites online.
+User:  ราคาเท่าไหร่
+BOT: Shangrila Hotel Bangkok rates start from around THB 2,500 per room/night depending upon availability during peak season (December - April).
+```
+
 
 ```
 Domain that is good
