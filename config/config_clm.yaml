@@ -1,6 +1,8 @@
 data:
+  # train_path: /home/kunato/instruct-transformer/filelist/inst_v1_en_th_train.txt
+  # test_path: /home/kunato/instruct-transformer/filelist/inst_v1_en_th_test.txt
   train_path: /home/kunato/instruct-transformer/filelist/inst_v1_en_th_train.txt
-  test_path: /home/kunato/instruct-transformer/filelist/inst_v1_en_th_test.txt
+  test_path: /home/kunato/instruct-transformer/filelist/inst_v1_q_th_a_en_test.txt
   
 training_args:
   fp16: True

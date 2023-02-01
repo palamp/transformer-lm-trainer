@@ -3,6 +3,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModelForSeq2Se
 import torch
 from time import sleep
 import os
+from pythainlp.util import normalize
 os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 
@@ -12,6 +13,7 @@ class InferenceHandler:
         print('loading model')
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model_type = model_type
+        self.model_name = model_name
         self.device = device
         if model_type == 'clm':
             self.model = AutoModelForCausalLM.from_pretrained(
@@ -25,7 +27,10 @@ class InferenceHandler:
 
     def _get_input_text(self, text: str, input_text: str):
         if self.model_type == 'clm':
+            if 'xglm' in self.model_name:
+                return text + "User:" + input_text + "Rosey:" + self.tokenizer.eos_token
             return text + "User:" + input_text + "Rosey:"
+            # return text + "User: " + input_text
         return text + "User:" + input_text
 
     def run_loop(self):
@@ -55,17 +60,18 @@ class InferenceHandler:
                                           #   top_k=4,
                                           repetition_penalty=1.03,
                                           penalty_alpha=0.6,
-                                          eos_token_id=self.tokenizer.eos_token_id
+                                          #   eos_token_id=self.tokenizer.eos_token_id
                                           )
             decode_text = self.tokenizer.decode(
                 outputs[0], skip_special_tokens=True)
-            # print('decode', decode_text)
-            decode_text = decode_text.replace(text, '').split('User')[0]
+            decode_text = normalize(decode_text).replace(normalize(text), '')
             print('BOT:', decode_text)
             text = text + decode_text
 
 
 # %%
 handler = InferenceHandler(
-    'results/022', device=torch.device('cuda:0'))
+    'results/023', device=torch.device('cuda:0'))
 handler.run_loop()
+
+# %%

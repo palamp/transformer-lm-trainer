@@ -106,11 +106,24 @@ BOT:
 Do prompting in thai, but answer in english will help cross-language knowledge sharing?
 [User THAI <----> BOT (ENG)] -> Translate -> User
 [] -> scope
+Try see, translation paper / multi-language lm paper
+xlm, m2m100, nllb-200, ...
 ```
 
 ```
-ท้องฟ้าเป็นสีม่วงเพราะอะไร -> Wrong
+ท้องฟ้าเป็นสีม่วงเพราะอะไร -> Not make any sense
 ท้องฟ้าเป็นสีม่วงเพราะอะไร? -> Have some sense
+```
+
+```
+mgpt generated more footer noise 
+-> วิธีการรักษาความปลอดภัยทางสังคมของผู้เข้าชมเว็บไซต์ Copyright © 2019 Posted by admin in Uncategorized " Dropship 1 1001 2 (อัปเดตล่าสุด
+-> ...
+```
+
+```
+Do something like train reward model -> train generative -> sample generative -> train another reward model (with original data & new sample data & first generation data?)
+-> next step (train model to predict what sample to be choose / or may be using rule-based / model-based NLU algorithm)
 ```
 
 
