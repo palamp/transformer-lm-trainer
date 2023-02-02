@@ -199,4 +199,6 @@ def calc_loss(n, d):
 # 2.7B * 54B ~ 2.46 (180_000 baht) (much more than pythia)
 # 6.7B * 134B ~ 2.28 (900_000 baht) (little better than pythia)
 # or 2.7B * 134B ~ 2.34 (? 450_000 baht) (same as pythia)
+# 66B OPT * 300B ~ 2.10 (same as gpt-neox)
+# 66B * 400B ~ 2.078 = gpt-3
 ```
