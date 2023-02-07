@@ -1,3 +1,28 @@
+
+```
+# google deeplearning vm suck
+rm -rf ~/.cache/torch_extensions/
+conda create --name myenv python=3.9
+pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 --extra-index-url https://download.pytorch.org/whl/cu113
+
+
+BS=32 * accum=2 [02:55<13:22:40,  9.61s/it] (use ~47 GB of gpu ram & 120GB of ram)
+$3.93 per GPU
+```
+
+```
+# GCP VM NVME https://cloud.google.com/compute/docs/disks/add-local-ssd
+lsblk
+sudo mkfs.ext4 -F /dev/nvme0n1
+sudo mkdir -p /mnt/disks/nvme
+sudo mount /dev/nvme0n1 /mnt/disks/nvme
+sudo chmod a+w /mnt/disks/nvme/
+sudo vim /etc/fstab
+
+echo UUID=`sudo blkid -s UUID -o value /dev/disk/by-id/google-local-nvme-ssd-0` /mnt/disks/nvme ext4 discard,defaults,nofail 0 2 | sudo tee -a /etc/fstab
+UUID=1c2c1d50-61e3-4fc3-87f8-d14f1299f8e0 /mnt/disks/nvme ext4 discard,defaults,nofail 0 2
+```
+
 ```
 <!-- original -->
 defaultdict(<class 'int'>, {'dahoas': 32718, 'anthrop_redteam': 6521, 'anthrop_helpful': 6359, 'synth_code': 3444, 'synth_qa': 15329, 'conala': 2759})
