@@ -9,11 +9,12 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 class InferenceHandler:
 
-    def __init__(self, model_name: str, model_type='clm', device=torch.device('cuda:0')) -> None:
+    def __init__(self, model_name: str, bot_name: str, model_type='clm', device=torch.device('cuda:0')) -> None:
         print('loading model')
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model_type = model_type
         self.model_name = model_name
+        self.bot_name = bot_name
         self.device = device
         if model_type == 'clm':
             self.model = AutoModelForCausalLM.from_pretrained(
@@ -28,10 +29,19 @@ class InferenceHandler:
     def _get_input_text(self, text: str, input_text: str):
         if self.model_type == 'clm':
             if 'xglm' in self.model_name:
-                return text + "User:" + input_text + "Rosey:" + self.tokenizer.eos_token
-            return text + "User:" + input_text + "Rosey:"
+                return text + "User:" + input_text + f"\n{self.bot_name}:" + self.tokenizer.eos_token
+            return text + "User:" + input_text + f"\n{self.bot_name}:"
             # return text + "User: " + input_text
         return text + "User:" + input_text
+
+    def _get_resp_text(self, text: str, input_text: str):
+        right_side_of_input_text = normalize(
+            text).split(normalize(input_text))[1].strip()
+        resp = right_side_of_input_text.split(
+            normalize(f'{self.bot_name}'))[1].strip()
+        if(resp.startswith(':')):
+            return resp[1:]
+        return resp
 
     def run_loop(self):
         text = ''
@@ -64,14 +74,20 @@ class InferenceHandler:
                                           )
             decode_text = self.tokenizer.decode(
                 outputs[0], skip_special_tokens=True)
-            decode_text = normalize(decode_text).replace(normalize(text), '')
-            print('BOT:', decode_text)
-            text = text + decode_text
+            # print('decode_text', decode_text)
+
+            decode_text_resp = self._get_resp_text(decode_text, input_text)
+
+            # print('decode_text_new', decode_text_resp)
+            decode_text_resp = decode_text_resp.split(
+                'User')[0].strip().split(f'{self.bot_name}:')[0]
+            print('BOT:', decode_text_resp)
+            text = text + decode_text_resp
 
 
 # %%
 handler = InferenceHandler(
-    'results/025', device=torch.device('cuda:0'))
+    'results/023', bot_name='Rosey', device=torch.device('cuda:0'))
 handler.run_loop()
 
 # %%

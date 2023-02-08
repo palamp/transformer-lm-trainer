@@ -7,9 +7,13 @@ from tqdm import tqdm
 
 class EOSSplitTextDataset(Dataset):
 
-    def __init__(self, text_file: str, tokenizer_name: str, max_length=280, arch='clm', split_kw: Optional[str] = None) -> None:
+    def __init__(self, text_file: str, tokenizer_name: str, max_length=280, arch='clm', split_kw: Optional[str] = None, override_pad_token=True, calc_loss_on_pad=True) -> None:
         super().__init__()
         self.max_length = max_length
+        self.calc_loss_on_pad = calc_loss_on_pad
+        self.override_pad_token = override_pad_token
+        print('calc_loss_on_pad', self.calc_loss_on_pad)
+        print('override_pad_token', self.override_pad_token)
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
         if 'pythia' in tokenizer_name or 'gpt' in tokenizer_name:
             print('set pad_token_id 1')
@@ -17,7 +21,8 @@ class EOSSplitTextDataset(Dataset):
         elif "mGPT" in tokenizer_name:
             self.tokenizer.pad_token = self.tokenizer.eos_token
         elif "xglm" in tokenizer_name:
-            self.tokenizer.pad_token = self.tokenizer.eos_token
+            if self.override_pad_token:
+                self.tokenizer.pad_token = self.tokenizer.eos_token
         print('self.tokenizer.pad_token_id', self.tokenizer.pad_token_id)
         self.arch = arch
         with open(text_file) as f:
@@ -55,12 +60,17 @@ class EOSSplitTextDataset(Dataset):
             new_data[k] = data[k][0]
         return new_data
 
+    def _get_labels(self, labels_tokens):
+        if self.calc_loss_on_pad:
+            return labels_tokens
+        return torch.where(labels_tokens == self.tokenizer.pad_token_id, -100, labels_tokens)
+
     def __getitem__(self, idx):
         text = self.entries[idx]
         if self.arch == 'clm':
             tokens = self.tokenizer.encode_plus(
                 text, padding='max_length', max_length=self.max_length, return_tensors='pt', return_attention_mask=True, truncation=True)
-            tokens['labels'] = tokens['input_ids']
+            tokens['labels'] = self._get_labels(tokens['input_ids'])
         elif self.arch == 'prefix_lm':
             if self.split_kw is not None and self.split_kw in text:
                 inputs, labels = text.split(self.split_kw)[:2]
@@ -74,7 +84,7 @@ class EOSSplitTextDataset(Dataset):
                 labels, padding='max_length', max_length=self.max_length, return_tensors='pt', truncation=True, return_attention_mask=False)['input_ids']
             tokens = {'input_ids': inputs_tokens['input_ids'],
                       'attention_mask': inputs_tokens['attention_mask']}
-            tokens['labels'] = labels_tokens
+            tokens['labels'] = self._get_labels(labels_tokens)
         else:
             raise NotImplementedError()
         # {'input_ids': tensor, 'attention_mask': tensor, 'labels': tensor}
@@ -85,8 +95,10 @@ if __name__ == '__main__':
     from transformers import AutoTokenizer
     from torch.utils.data import DataLoader
     import torch
+    from omegaconf import OmegaConf
+    config = OmegaConf.load('config/config_clm.yaml')
     dataset = EOSSplitTextDataset(
-        '/home/kunato/language-model-agents/inst_v1_test.txt', 'facebook/xglm-1.7B', arch='clm')
+        '/home/kunato/language-model-agents/inst_v1_test.txt', 'facebook/xglm-1.7B', arch='clm', **config.data.config)
     loader = DataLoader(dataset, shuffle=False)
     print('total', len(dataset))
     for b in loader:
