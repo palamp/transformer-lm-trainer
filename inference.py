@@ -18,7 +18,7 @@ class InferenceHandler:
         self.device = device
         if model_type == 'clm':
             self.model = AutoModelForCausalLM.from_pretrained(
-                model_name).to(device)
+                model_name).half().to(device)
         elif model_type == 'seq2seq':
             self.model = AutoModelForSeq2SeqLM.from_pretrained(
                 model_name).to(device)
@@ -87,7 +87,7 @@ class InferenceHandler:
 
 # %%
 handler = InferenceHandler(
-    'results/023', bot_name='Rosey', device=torch.device('cuda:0'))
+    'checkpoint-1000', bot_name='Deeple', device=torch.device('cuda:0'))
 handler.run_loop()
 
 # %%
