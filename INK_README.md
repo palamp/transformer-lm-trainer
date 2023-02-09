@@ -1,8 +1,8 @@
 ```
 4xA100_80G
-> 16bs @ 280 max_length
-> 8bs @ 1024 max_length
-4bs @ 2048 max_length
+> 16bs @ 280 max_length @ ~ 1 hours
+> 8bs @ 1024 max_length @ 720/5046 [41:29<3:57:00,  3.29s/it]
+4bs @ 2048 max_length @ 14/10091 [00:57<11:21:47,  4.06s/i
 # Model checkpoint
 7.5B model need hdd=126 per checkpoint (98) for checkpoint, 28 for weight
 ```
