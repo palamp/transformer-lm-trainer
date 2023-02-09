@@ -1,3 +1,10 @@
+```
+loss=8 @ 10
+loss=6 @ 20
+loss=2 @ 30
+loss=1.1 @ 40
+```
+
 
 ```
 # google deeplearning vm suck
@@ -226,4 +233,133 @@ def calc_loss(n, d):
 # or 2.7B * 134B ~ 2.34 (? 450_000 baht) (same as pythia)
 # 66B OPT * 300B ~ 2.10 (same as gpt-neox)
 # 66B * 400B ~ 2.078 = gpt-3
+```
+
+```
+# with no pad-change to eos, with pad calc for loss
+[2023-02-08 13:52:09,860] [INFO] [config.py:997:print_user_config]   json = {
+    "fp16": {
+        "enabled": true,
+        "loss_scale": 0,
+        "loss_scale_window": 1000,
+        "initial_scale_power": 16,
+        "hysteresis": 2,
+        "min_loss_scale": 1
+    },
+    "optimizer": {
+        "type": "AdamW",
+        "params": {
+            "lr": 1e-05,
+            "betas": [0.9, 0.95],
+            "eps": 1e-08,
+            "weight_decay": 0.0
+        }
+    },
+    "scheduler": {
+        "type": "WarmupLR",
+        "params": {
+            "warmup_min_lr": 0,
+            "warmup_max_lr": 1e-05,
+            "warmup_num_steps": 20
+        }
+    },
+    "zero_optimization": {
+        "stage": 2,
+        "allgather_partitions": true,
+        "allgather_bucket_size": 2.000000e+08,
+        "overlap_comm": true,
+        "reduce_scatter": true,
+        "reduce_bucket_size": 2.000000e+08,
+        "contiguous_gradients": true,
+        "cpu_offload": true
+    },
+    "gradient_accumulation_steps": 2,
+    "gradient_clipping": 0.5,
+    "steps_per_print": 2.000000e+03,
+    "train_batch_size": 64,
+    "train_micro_batch_size_per_gpu": 32,
+    "wall_clock_breakdown": false
+}
+Using /home/kunato/.cache/torch_extensions/py39_cu113 as PyTorch extensions root...
+No modifications detected for re-loaded extension module utils, skipping build step...
+Loading extension module utils...
+Time to load utils op: 0.0004189014434814453 seconds
+***** Running training *****
+  Num examples = 160929
+  Num Epochs = 1
+  Instantaneous batch size per device = 32
+  Total train batch size (w. parallel, distributed & accumulation) = 64
+  Gradient Accumulation steps = 2
+  Total optimization steps = 2515
+  Number of trainable parameters = 7492771840
+  0%|                                                                                                                                                                   | 0/2515 [00:00<?, ?it/s][2023-02-08 13:52:24,187] [INFO] [stage_1_and_2.py:1762:step] [deepspeed] OVERFLOW! Rank 0 Skipping step. Attempted loss scale: 65536, reducing to 65536
+  0%|                                                                                                                                                        | 1/2515 [00:14<10:00:14, 14.33s/it][2023-02-08 13:52:33,452] [INFO] [stage_1_and_2.py:1762:step] [deepspeed] OVERFLOW! Rank 0 Skipping step. Attempted loss scale: 65536, reducing to 32768.0
+  0%|                                                                                                                                                         | 2/2515 [00:23<7:55:18, 11.35s/it][2023-02-08 13:52:42,731] [INFO] [stage_1_and_2.py:1762:step] [deepspeed] OVERFLOW! Rank 0 Skipping step. Attempted loss scale: 32768.0, reducing to 16384.0
+  0%|▏                                                                                                                                                        | 3/2515 [00:32<7:15:34, 10.40s/it][2023-02-08 13:52:52,029] [INFO] [stage_1_and_2.py:1762:step] [deepspeed] OVERFLOW! Rank 0 Skipping step. Attempted loss scale: 16384.0, reducing to 8192.0
+  0%|▏                                                                                                                                                        | 4/2515 [00:42<6:57:06,  9.97s/it][2023-02-08 13:53:01,315] [INFO] [stage_1_and_2.py:1762:step] [deepspeed] OVERFLOW! Rank 0 Skipping step. Attempted loss scale: 8192.0, reducing to 4096.0
+  0%|▎                                                                                                                                                        | 5/2515 [00:51<6:46:40,  9.72s/it][2023-02-08 13:53:10,598] [INFO] [stage_1_and_2.py:1762:step] [deepspeed] OVERFLOW! Rank 0 Skipping step. Attempted loss scale: 4096.0, reducing to 2048.0
+{'loss': 10.6234, 'learning_rate': 4.6275642631951835e-06, 'epoch': 0.0}
+{'loss': 8.6182, 'learning_rate': 8.809389787307027e-06, 'epoch': 0.01}
+{'loss': 7.3904, 'learning_rate': 1e-05, 'epoch': 0.01}
+{'loss': 6.5842, 'learning_rate': 1e-05, 'epoch': 0.02}
+{'loss': 6.4482, 'learning_rate': 1e-05, 'epoch': 0.02}
+{'loss': 6.3746, 'learning_rate': 1e-05, 'epoch': 0.02}
+{'loss': 5.9596, 'learning_rate': 1e-05, 'epoch': 0.03}
+{'loss': 5.6346, 'learning_rate': 1e-05, 'epoch': 0.03}
+{'loss': 5.4766, 'learning_rate': 1e-05, 'epoch': 0.04}
+{'loss': 5.1166, 'learning_rate': 1e-05, 'epoch': 0.04}
+{'loss': 4.8258, 'learning_rate': 1e-05, 'epoch': 0.04}
+{'loss': 4.5961, 'learning_rate': 1e-05, 'epoch': 0.05}
+{'loss': 4.2157, 'learning_rate': 1e-05, 'epoch': 0.05}
+{'loss': 3.8688, 'learning_rate': 1e-05, 'epoch': 0.06}
+{'loss': 3.6674, 'learning_rate': 1e-05, 'epoch': 0.06}
+{'loss': 3.3288, 'learning_rate': 1e-05, 'epoch': 0.06}
+{'loss': 3.1702, 'learning_rate': 1e-05, 'epoch': 0.07}
+{'loss': 3.2118, 'learning_rate': 1e-05, 'epoch': 0.07}
+{'loss': 3.091, 'learning_rate': 1e-05, 'epoch': 0.08}
+{'loss': 3.1509, 'learning_rate': 1e-05, 'epoch': 0.08}
+  8%|████████████                                                                                                                                           | 200/2515 [46:16<9:01:34, 14.04s/it]***** Running Evaluation *****
+  Num examples = 1624
+  Batch size = 8
+{'eval_loss': 0.7646484375, 'eval_runtime': 38.6124, 'eval_samples_per_second': 42.059, 'eval_steps_per_second': 5.257, 'epoch': 0.08}
+{'loss': 2.9816, 'learning_rate': 1e-05, 'epoch': 0.08}
+{'loss': 3.0971, 'learning_rate': 1e-05, 'epoch': 0.09}
+{'loss': 3.2587, 'learning_rate': 1e-05, 'epoch': 0.09}
+{'loss': 3.0206, 'learning_rate': 1e-05, 'epoch': 0.1}
+{'loss': 3.452, 'learning_rate': 1e-05, 'epoch': 0.1}
+{'loss': 3.0924, 'learning_rate': 1e-05, 'epoch': 0.1}
+{'loss': 3.5004, 'learning_rate': 1e-05, 'epoch': 0.11}
+{'loss': 3.4638, 'learning_rate': 1e-05, 'epoch': 0.11}
+{'loss': 3.2218, 'learning_rate': 1e-05, 'epoch': 0.12}
+{'loss': 3.5955, 'learning_rate': 1e-05, 'epoch': 0.12}
+{'loss': 3.6354, 'learning_rate': 1e-05, 'epoch': 0.12}
+{'loss': 3.4691, 'learning_rate': 1e-05, 'epoch': 0.13}
+{'loss': 3.5324, 'learning_rate': 1e-05, 'epoch': 0.13}
+{'loss': 3.6847, 'learning_rate': 1e-05, 'epoch': 0.14}
+{'loss': 3.5771, 'learning_rate': 1e-05, 'epoch': 0.14}
+{'loss': 3.7693, 'learning_rate': 1e-05, 'epoch': 0.14}
+{'loss': 3.5253, 'learning_rate': 1e-05, 'epoch': 0.15}
+{'loss': 3.5966, 'learning_rate': 1e-05, 'epoch': 0.15}
+{'loss': 3.7167, 'learning_rate': 1e-05, 'epoch': 0.16}
+{'loss': 3.8509, 'learning_rate': 1e-05, 'epoch': 0.16}
+ 16%|███████████████████████▋                                                                                                                             | 400/2515 [1:33:28<8:10:14, 13.91s/it]***** Running Evaluation *****
+  Num examples = 1624
+  Batch size = 8
+{'eval_loss': 0.5908203125, 'eval_runtime': 38.5426, 'eval_samples_per_second': 42.135, 'eval_steps_per_second': 5.267, 'epoch': 0.16}
+{'loss': 3.5652, 'learning_rate': 1e-05, 'epoch': 0.16}
+{'loss': 3.6688, 'learning_rate': 1e-05, 'epoch': 0.17}
+{'loss': 3.9716, 'learning_rate': 1e-05, 'epoch': 0.17}
+{'loss': 3.9224, 'learning_rate': 1e-05, 'epoch': 0.17}
+{'loss': 3.7126, 'learning_rate': 1e-05, 'epoch': 0.18}
+{'loss': 3.9527, 'learning_rate': 1e-05, 'epoch': 0.18}
+{'loss': 3.8443, 'learning_rate': 1e-05, 'epoch': 0.19}
+{'loss': 3.8986, 'learning_rate': 1e-05, 'epoch': 0.19}
+{'loss': 4.0804, 'learning_rate': 1e-05, 'epoch': 0.19}
+{'loss': 4.0222, 'learning_rate': 1e-05, 'epoch': 0.2}
+{'loss': 3.9105, 'learning_rate': 1e-05, 'epoch': 0.2}
+{'loss': 4.0428, 'learning_rate': 1e-05, 'epoch': 0.21}
+{'loss': 4.1126, 'learning_rate': 1e-05, 'epoch': 0.21}
+{'loss': 4.1881, 'learning_rate': 1e-05, 'epoch': 0.21}
+{'loss': 4.0692, 'learning_rate': 1e-05, 'epoch': 0.22}
+{'loss': 4.0088, 'learning_rate': 1e-05, 'epoch': 0.22}
 ```

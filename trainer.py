@@ -29,7 +29,7 @@ class CustomTrainer(Trainer):
                                      for p in self.model.parameters() if p.requires_grad)
             print(f'Total train param: {total_train_params:,}')
         training_args = TrainingArguments(
-            do_train=True, do_eval=True, evaluation_strategy='steps', output_dir=result_dir, dataloader_num_workers=0, learning_rate=self.config.lr, **self.config.training_args)
+            do_train=True, do_eval=True, evaluation_strategy='steps', output_dir=result_dir, dataloader_num_workers=4, learning_rate=self.config.lr, **self.config.training_args)
         super().__init__(self.model, training_args, default_data_collator, self._get_train_dataset(),
                          self._get_eval_dataset(), self.tokenizer, **config.get('trainer_args', {}))
 

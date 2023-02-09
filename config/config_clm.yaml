@@ -12,7 +12,7 @@ training_args:
   num_train_epochs: 1
   logging_steps: 20
   eval_steps: 200
-  save_steps: 1000
+  save_steps: 1500
   # gradient_accumulation_steps: 1
   # per_device_train_batch_size: 32
   gradient_accumulation_steps: 4 # facebook/xglm-1.7B

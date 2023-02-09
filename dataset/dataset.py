@@ -3,6 +3,7 @@ from transformers import AutoTokenizer
 from typing import Optional
 import random
 from tqdm import tqdm
+import torch
 
 
 class EOSSplitTextDataset(Dataset):
