@@ -1,8 +1,6 @@
 ```
-loss=8 @ 10
-loss=6 @ 20
-loss=2 @ 30
-loss=1.1 @ 40
+# Model checkpoint
+7.5B model need hdd=126 per checkpoint (98) for checkpoint, 28 for weight
 ```
 
 

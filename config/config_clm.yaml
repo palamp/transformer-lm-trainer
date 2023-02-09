@@ -11,13 +11,16 @@ training_args:
   fp16: True
   num_train_epochs: 1
   logging_steps: 20
+  adam_beta1: 0.9
+  adam_beta2: 0.95
+  max_grad_norm: 0.5
   eval_steps: 200
   save_steps: 1500
   # gradient_accumulation_steps: 1
   # per_device_train_batch_size: 32
   gradient_accumulation_steps: 4 # facebook/xglm-1.7B
   per_device_train_batch_size: 8 # facebook/xglm-1.7B
-  warmup_steps: 5
+  warmup_steps: 20
   deepspeed: 'config/ds_config.json' # need to run using deepspeed
 
 
