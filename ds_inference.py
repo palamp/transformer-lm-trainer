@@ -1,63 +1,63 @@
 # %%
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModelForSeq2SeqLM
+import re
+from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 from time import sleep
 import os
+import deepspeed
 from pythainlp.util import normalize
+
 os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+local_rank = int(os.getenv('LOCAL_RANK', '0'))
+world_size = int(os.getenv('WORLD_SIZE', '1'))
+deepspeed.init_distributed("nccl")
 
 
 class InferenceHandler:
 
-    def __init__(self, model_name: str, bot_name: str, model_type='clm', device=torch.device('cuda:0')) -> None:
+    def __init__(self, model_name: str, bot_name: str, device=torch.device('cuda:0')) -> None:
         print('loading model')
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model_type = model_type
         self.model_name = model_name
         self.bot_name = bot_name
         self.device = device
-        if model_type == 'clm':
+
+        with deepspeed.OnDevice(dtype=torch.float16, device="cuda:0"):
             self.model = AutoModelForCausalLM.from_pretrained(
-                model_name).half().to(device)
-        elif model_type == 'seq2seq':
-            self.model = AutoModelForSeq2SeqLM.from_pretrained(
-                model_name).to(device)
-        else:
-            raise NotImplementedError()
+                model_name).half()
+        self.model = deepspeed.init_inference(self.model,
+                                              mp_size=world_size,
+                                              dtype=torch.float16,
+                                              replace_method='auto',
+                                              replace_with_kernel_inject=True)
         print('loaded')
 
+    def _get_instruction_text(self):
+        return ''
+        # return f'The following is conversation between an Deeple assistant called {self.bot_name}, and a human user called User. {self.bot_name} is intelligent, knowledgeable, wise and polite.'
+
     def _get_input_text(self, text: str, input_text: str):
-        if self.model_type == 'clm':
-            if 'xglm' in self.model_name:
-                return text + "User:" + input_text + f"\n{self.bot_name}:" + self.tokenizer.eos_token
-            return text + "User:" + input_text + f"\n{self.bot_name}:"
-            # return text + "User: " + input_text
-        return text + "User:" + input_text
+        return text + "User:" + input_text + f"\n{self.bot_name}:"
 
     def _get_resp_text(self, text: str, input_text: str):
-        input_normalize = normalize(input_text)
-        if input_normalize != '':
-            right_side_of_input_text = normalize(
-                text).split(input_normalize)[1].strip()
-        else:
-            right_side_of_input_text = text
-
+        text = re.sub(r'' + self.bot_name +
+                      r'[ \t]*:', f'{self.bot_name}:', text)
+        right_side_of_input_text = normalize(
+            text).split(normalize(input_text))[1].strip()
         resp = right_side_of_input_text.split(
-            normalize(f'{self.bot_name}'))[1].strip()
+            normalize(f'{self.bot_name}:'))[1].strip()
         if(resp.startswith(':')):
             return resp[1:]
         return resp
 
     def run_loop(self):
-        text = ''
+        text = self._get_instruction_text()
         while True:
             sleep(1)
             input_text = input()
             if input_text == 'RESET':
                 print("RESET")
-                text = ''
-                continue
-            if input_text == '':
+                text = self._get_instruction_text()
                 continue
             print('User: ', input_text)
             # write a short story about an elf maiden named Julia who goes on an adventure with a warrior named Rallio. The two of them have to go through many trials and tribulations in order for the tale to end happily ever after. Tell the story from Rallio's point of view.
@@ -81,11 +81,8 @@ class InferenceHandler:
                                           )
             decode_text = self.tokenizer.decode(
                 outputs[0], skip_special_tokens=True)
-            # print('decode_text', decode_text)
-
             decode_text_resp = self._get_resp_text(decode_text, input_text)
 
-            # print('decode_text_new', decode_text_resp)
             decode_text_resp = decode_text_resp.split(
                 'User')[0].strip().split(f'{self.bot_name}:')[0]
             print('BOT:', decode_text_resp)
@@ -96,5 +93,3 @@ class InferenceHandler:
 handler = InferenceHandler(
     'results/037', bot_name='Deeple', device=torch.device('cuda:0'))
 handler.run_loop()
-
-# %%

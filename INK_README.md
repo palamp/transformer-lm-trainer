@@ -7,6 +7,17 @@
 7.5B model need hdd=126 per checkpoint (98) for checkpoint, 28 for weight
 ```
 
+```
+# @ bs=2
+# dataset of 11 example for 10 epoch = overfit to deeple
+# 1 epoch = not answer correctly
+```
+
+```
+Problem
+Some-how, need to support chitchat & context & acception
+```
+
 
 ```
 # google deeplearning vm suck
