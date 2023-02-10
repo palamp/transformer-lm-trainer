@@ -59,6 +59,8 @@ class InferenceHandler:
                 print("RESET")
                 text = self._get_instruction_text()
                 continue
+            if input_text == '':
+                continue
             print('User: ', input_text)
             # write a short story about an elf maiden named Julia who goes on an adventure with a warrior named Rallio. The two of them have to go through many trials and tribulations in order for the tale to end happily ever after. Tell the story from Rallio's point of view.
             # Why don't cats and dogs get along?
@@ -91,5 +93,5 @@ class InferenceHandler:
 
 # %%
 handler = InferenceHandler(
-    'results/037', bot_name='Deeple', device=torch.device('cuda:0'))
+    'results/040', bot_name='Deeple', device=torch.device('cuda:0'))
 handler.run_loop()
