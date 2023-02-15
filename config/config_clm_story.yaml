@@ -1,0 +1,41 @@
+data:
+  # train_path: /home/kunato/instruct-transformer/filelist/inst_v1_en_th_train.txt
+  # test_path: /home/kunato/instruct-transformer/filelist/inst_v1_en_th_test.txt
+  train_path: /mnt/8TB/dataset/internet-text-dataset/movie-script/conversation_instruct.txt
+  config:
+    calc_loss_on_pad: False
+    override_pad_token: False
+    max_length: 1024
+  
+training_args:
+  fp16: True
+  num_train_epochs: 1
+  logging_steps: 200
+  adam_beta1: 0.9
+  adam_beta2: 0.95
+  max_grad_norm: 0.5
+  eval_steps: 200
+  save_steps: 1500
+  gradient_accumulation_steps: 1
+  per_device_train_batch_size: 16 # we can do offload bs=16*1024=rank on 3090 & 62gb ram
+  # gradient_accumulation_steps: 4 # facebook/xglm-1.7B
+  # per_device_train_batch_size: 8 # facebook/xglm-1.7B
+  warmup_steps: 20
+  deepspeed: 'config/ds_offload_config.json' # need to run using deepspeed
+
+
+visualize:
+  examples:
+    # - "User: Please recommend me a hotel in bangkok?\n\nDeeple:"
+    # - "User: แนะนำโรงแรมในกรุงเทพให้หน่อย\n\nDeeple:"
+    # - "User: Hello\n\nDeeple:"
+    # - "User: Write me a job application for software engineer\n\nDeeple:"
+    - "User: write me a story about Tae and Arisa come to the party. They want to introduce a band that performs often at the poppin'party, so they decide to ask some casual questions about how they got into the music business. They start by asking if they have any good practices, but then they quickly change the subject to playing the guitar. Then they ask if anything has happened to them in the past during a concert. Saya tells them that one time she sent her drum sticks flying while singing, which made them fly out of her hand. She had prepared an extra set of sticks for the occasion, so she grabbed them before the song began.\n\nUser: starring Tae,Arisa,Saya,Marina\n\nChip:"
+
+
+model_name: EleutherAI/pythia-1.4b-deduped
+# model_name: sberbank-ai/mGPT
+# model_name: EleutherAI/pythia-70m-deduped
+
+# lr: 5e-5 # xglm
+lr: 5e-6

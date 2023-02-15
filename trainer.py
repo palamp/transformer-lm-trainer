@@ -87,8 +87,10 @@ class CustomTrainer(Trainer):
 
     def _get_eval_dataset(self):
         data_config = self.config.data
-        eval_dataset = EOSSplitTextDataset(
-            data_config.test_path, tokenizer_name=self.config.get('tokenizer_name', self.config.model_name), arch='prefix_lm' if self.is_enc_dec else 'clm', **data_config.get('config', {}))
+        test_path = data_config.get('test_path', None)
+        if test_path is None:
+            return None
+        eval_dataset = EOSSplitTextDataset(test_path, tokenizer_name=self.config.get('tokenizer_name', self.config.model_name), arch='prefix_lm' if self.is_enc_dec else 'clm', **data_config.get('config', {}))
         return eval_dataset
 
 

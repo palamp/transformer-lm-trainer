@@ -13,6 +13,7 @@ class EOSSplitTextDataset(Dataset):
         self.max_length = max_length
         self.calc_loss_on_pad = calc_loss_on_pad
         self.override_pad_token = override_pad_token
+        print('max_length', max_length)
         print('calc_loss_on_pad', self.calc_loss_on_pad)
         print('override_pad_token', self.override_pad_token)
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
