@@ -12,10 +12,8 @@ class EOSSplitTextDataset(Dataset):
         super().__init__()
         self.max_length = max_length
         self.calc_loss_on_pad = calc_loss_on_pad
-        self.override_pad_token = override_pad_token
         print('max_length', max_length)
         print('calc_loss_on_pad', self.calc_loss_on_pad)
-        print('override_pad_token', self.override_pad_token)
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
         if 'pythia' in tokenizer_name or 'gpt' in tokenizer_name:
             print('set pad_token_id 1')
@@ -23,7 +21,8 @@ class EOSSplitTextDataset(Dataset):
         elif "mGPT" in tokenizer_name:
             self.tokenizer.pad_token = self.tokenizer.eos_token
         elif "xglm" in tokenizer_name:
-            if self.override_pad_token:
+            print('override_pad_token', override_pad_token)
+            if override_pad_token:
                 self.tokenizer.pad_token = self.tokenizer.eos_token
         print('self.tokenizer.pad_token_id', self.tokenizer.pad_token_id)
         self.arch = arch
