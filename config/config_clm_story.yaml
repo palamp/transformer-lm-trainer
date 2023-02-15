@@ -9,19 +9,19 @@ data:
   
 training_args:
   fp16: True
-  num_train_epochs: 1
-  logging_steps: 200
+  num_train_epochs: 2
+  logging_steps: 100
   adam_beta1: 0.9
   adam_beta2: 0.95
   max_grad_norm: 0.5
-  eval_steps: 200
+  eval_steps: 10
   save_steps: 1500
   gradient_accumulation_steps: 1
-  per_device_train_batch_size: 16 # we can do offload bs=16*1024=rank on 3090 & 62gb ram
+  per_device_train_batch_size: 8 # we can do offload bs=16*1024=rank on 3090 & 62gb ram
   # gradient_accumulation_steps: 4 # facebook/xglm-1.7B
   # per_device_train_batch_size: 8 # facebook/xglm-1.7B
   warmup_steps: 20
-  deepspeed: 'config/ds_offload_config.json' # need to run using deepspeed
+  deepspeed: 'config/ds_config.json' # need to run using deepspeed
 
 
 visualize:
@@ -30,7 +30,8 @@ visualize:
     # - "User: แนะนำโรงแรมในกรุงเทพให้หน่อย\n\nDeeple:"
     # - "User: Hello\n\nDeeple:"
     # - "User: Write me a job application for software engineer\n\nDeeple:"
-    - "User: write me a story about Tae and Arisa come to the party. They want to introduce a band that performs often at the poppin'party, so they decide to ask some casual questions about how they got into the music business. They start by asking if they have any good practices, but then they quickly change the subject to playing the guitar. Then they ask if anything has happened to them in the past during a concert. Saya tells them that one time she sent her drum sticks flying while singing, which made them fly out of her hand. She had prepared an extra set of sticks for the occasion, so she grabbed them before the song began.\n\nUser: starring Tae,Arisa,Saya,Marina\n\nChip:"
+    - "User: write me a story about Tae and Arisa come to the party. They want to introduce a band that performs often at the poppin'party, so they decide to ask some casual questions about how they got into the music business. They start by asking if they have any good practices, but then they quickly change the subject to playing the guitar. Then they ask if anything has happened to them in the past during a concert. Saya tells them that one time she sent her drum sticks flying while singing, which made them fly out of her hand. She had prepared an extra set of sticks for the occasion, so she grabbed them before the song began.\n\nUser: starring Tae,Arisa,Saya,Marina\n\nChip: Sure\n\nChip:"
+    - "User: write me a story about Howard wakes up and tells his wife that he'll be sleeping in the same room for a while. He asks her to eat some eggs, which she does. She doesn't understand why he didn't just leave her there. Howard says he was running back when he came across her car wrecked. The entire town is covered with poisonous chemicals. It would have killed him if he hadn't gone outside. But how could he leave her inside? When he gets home, he tells her that they need to talk because it's getting dark outside. They can't get out of bed without talking, so he leaves.\n\nUser: starring Howard\n\nChip: Sure\n\nChip:"
 
 
 model_name: EleutherAI/pythia-1.4b-deduped
