@@ -37,7 +37,7 @@ class InferenceHandler:
         # return f'The following is conversation between an Deeple assistant called {self.bot_name}, and a human user called User. {self.bot_name} is intelligent, knowledgeable, wise and polite.'
 
     def _get_input_text(self, text: str, input_text: str):
-        return text + "User:" + input_text + f"\n{self.bot_name}:"
+        return text + "User:" + input_text + f"\n\n{self.bot_name}:"
 
     def _get_resp_text(self, text: str, input_text: str):
         text = re.sub(r'' + self.bot_name +
@@ -93,5 +93,5 @@ class InferenceHandler:
 
 # %%
 handler = InferenceHandler(
-    'results/040', bot_name='Deeple', device=torch.device('cuda:0'))
+    'results/041', bot_name='DeepleGPT', device=torch.device('cuda:0'))
 handler.run_loop()

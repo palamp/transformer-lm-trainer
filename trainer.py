@@ -1,11 +1,53 @@
-from transformers import Trainer, TrainingArguments, AutoModelForCausalLM, AutoConfig, AutoModelForSeq2SeqLM, AutoTokenizer, default_data_collator, set_seed
+from transformers import AutoModelForCausalLM, AutoConfig, AutoModelForSeq2SeqLM, AutoTokenizer, PreTrainedModel, PreTrainedTokenizer, default_data_collator, set_seed
+from transformers import Trainer, TrainingArguments, TrainerCallback, TrainerState, TrainerControl
 from dataset.dataset import EOSSplitTextDataset
 from omegaconf import OmegaConf
 import os
+from typing import List
 import shutil
 from utils_v2 import get_result_dir, on_after_train, is_main_process
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 set_seed(42)
+
+
+class GenerationCallback(TrainerCallback):
+
+    def __init__(self, config, result_dir: str) -> None:
+        super().__init__()
+        self.config = config
+        self.result_dir = result_dir
+        self.log_example: List[str] = self.config.get('visualize', {}).get('examples', [])
+        print('Will visualize this on going')
+        print(self.log_example)
+
+    def _generate(self, model: PreTrainedModel, tokenizer: PreTrainedTokenizer, text: str) -> str:
+        inputs = tokenizer.encode(text, return_tensors="pt")
+        outputs = model.generate(inputs.to(model.device),
+                                 no_repeat_ngram_size=4,
+                                 do_sample=True,
+                                 top_p=0.95,
+                                 temperature=0.5,
+                                 max_new_tokens=128,
+                                 top_k=4,
+                                 repetition_penalty=1.03,
+                                 penalty_alpha=0.6,
+                                 #   eos_token_id=self.tokenizer.eos_token_id
+                                 )
+        decode_text = tokenizer.decode(
+            outputs[0], skip_special_tokens=True)
+        return decode_text
+
+    def on_log(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, model: PreTrainedModel, tokenizer: PreTrainedTokenizer, logs=None, **kwargs):
+        if state.is_local_process_zero:
+            os.makedirs(self.result_dir, exist_ok=True)
+            with open(f'{self.result_dir}/examples.txt', 'a') as w:
+                w.write(
+                    f'=================={state.global_step}==================\n')
+                for example in self.log_example:
+                    generated_text = self._generate(model, tokenizer, example)
+                    remove_newline_g_text = ' '.join(
+                        generated_text.split('\n'))
+                    w.write(f'{remove_newline_g_text}\n')
 
 
 class CustomTrainer(Trainer):
@@ -23,7 +65,7 @@ class CustomTrainer(Trainer):
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.config.model_name, config=model_config)
         self._set_tokenizer()
-
+        generation_callback = GenerationCallback(self.config, result_dir)
         if is_main_process():
             total_train_params = sum(p.numel()
                                      for p in self.model.parameters() if p.requires_grad)
@@ -31,7 +73,7 @@ class CustomTrainer(Trainer):
         training_args = TrainingArguments(
             do_train=True, do_eval=True, evaluation_strategy='steps', output_dir=result_dir, dataloader_num_workers=0, learning_rate=self.config.lr, **self.config.training_args)
         super().__init__(self.model, training_args, default_data_collator, self._get_train_dataset(),
-                         self._get_eval_dataset(), self.tokenizer, **config.get('trainer_args', {}))
+                         self._get_eval_dataset(), self.tokenizer, callbacks=[generation_callback], **config.get('trainer_args', {}))
 
     def _set_tokenizer(self):
         self.tokenizer = AutoTokenizer.from_pretrained(

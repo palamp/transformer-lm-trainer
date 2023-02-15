@@ -27,6 +27,7 @@ class InferenceHandler:
         print('loaded')
 
     def _get_input_text(self, text: str, input_text: str):
+        return text + "User:" + input_text + f"\n\n{self.bot_name}:"
         if self.model_type == 'clm':
             if 'xglm' in self.model_name:
                 return text + "User:" + input_text + f"\n{self.bot_name}:" + self.tokenizer.eos_token
@@ -81,7 +82,7 @@ class InferenceHandler:
                                           )
             decode_text = self.tokenizer.decode(
                 outputs[0], skip_special_tokens=True)
-            # print('decode_text', decode_text)
+            print('decode_text', decode_text)
 
             decode_text_resp = self._get_resp_text(decode_text, input_text)
 
@@ -94,7 +95,7 @@ class InferenceHandler:
 
 # %%
 handler = InferenceHandler(
-    'results/037', bot_name='Deeple', device=torch.device('cuda:0'))
+    'results/043', bot_name='DeepleGPT', device=torch.device('cuda:0'))
 handler.run_loop()
 
 # %%
