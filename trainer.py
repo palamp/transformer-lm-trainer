@@ -16,7 +16,9 @@ class GenerationCallback(TrainerCallback):
         super().__init__()
         self.config = config
         self.result_dir = result_dir
-        self.log_example: List[str] = self.config.get('visualize', {}).get('examples', [])
+        self.generate_config = self.config.get('generate', {})
+        self.log_example: List[str] = self.generate_config.get('examples', [])
+
         print('Will visualize this on going')
         print(self.log_example)
 
@@ -27,11 +29,11 @@ class GenerationCallback(TrainerCallback):
                                  do_sample=True,
                                  top_p=0.95,
                                  temperature=0.5,
-                                 max_new_tokens=128,
                                  top_k=4,
                                  repetition_penalty=1.03,
                                  penalty_alpha=0.6,
-                                 #   eos_token_id=self.tokenizer.eos_token_id
+                                 eos_token_id=tokenizer.eos_token_id,
+                                 **self.generate_config.get('config', {})
                                  )
         decode_text = tokenizer.decode(
             outputs[0], skip_special_tokens=True)
@@ -75,7 +77,8 @@ class CustomTrainer(Trainer):
         eval_dataset = self._get_eval_dataset()
         training_args = TrainingArguments(
             do_train=True, do_eval=True, evaluation_strategy='steps', output_dir=result_dir, dataloader_num_workers=0, learning_rate=self.config.lr, eval_steps=self.eval_steps, **self.config.training_args)
-        super().__init__(self.model, training_args, default_data_collator, train_dataset, eval_dataset, self.tokenizer, callbacks=[generation_callback], **config.get('trainer_args', {}))
+        super().__init__(self.model, training_args, default_data_collator, train_dataset, eval_dataset,
+                         self.tokenizer, callbacks=[generation_callback], **config.get('trainer_args', {}))
 
     def _set_tokenizer(self):
         self.tokenizer = AutoTokenizer.from_pretrained(
@@ -93,7 +96,8 @@ class CustomTrainer(Trainer):
         if test_path is None:
             self.eval_steps = 10_000_000
             return None
-        eval_dataset = EOSSplitTextDataset(test_path, tokenizer_name=self.config.get('tokenizer_name', self.config.model_name), arch='prefix_lm' if self.is_enc_dec else 'clm', **data_config.get('config', {}))
+        eval_dataset = EOSSplitTextDataset(test_path, tokenizer_name=self.config.get(
+            'tokenizer_name', self.config.model_name), arch='prefix_lm' if self.is_enc_dec else 'clm', **data_config.get('config', {}))
         return eval_dataset
 
 

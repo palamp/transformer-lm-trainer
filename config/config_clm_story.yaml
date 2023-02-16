@@ -15,7 +15,7 @@ training_args:
   adam_beta2: 0.95
   max_grad_norm: 0.5
   eval_steps: 10
-  save_steps: 1500
+  save_steps: 4500
   gradient_accumulation_steps: 1
   per_device_train_batch_size: 8 # we can do offload bs=16*1024=rank on 3090 & 62gb ram
   # gradient_accumulation_steps: 4 # facebook/xglm-1.7B
@@ -24,7 +24,10 @@ training_args:
   deepspeed: 'config/ds_config.json' # need to run using deepspeed
 
 
-visualize:
+generate:
+  config:
+    min_new_tokens: 128
+    max_new_tokens: 256
   examples:
     # - "User: Please recommend me a hotel in bangkok?\n\nDeeple:"
     # - "User: แนะนำโรงแรมในกรุงเทพให้หน่อย\n\nDeeple:"
