@@ -92,6 +92,29 @@ class EOSSplitTextDataset(Dataset):
         return self._remove_batch(tokens)
 
 
+class CloneDataset(Dataset):
+
+    def __init__(self, dataset: Dataset, dataset_ratio=0.01, shuffle=True) -> None:
+        super().__init__()
+        full_dataset_len = len(dataset)
+        self.dataset_len = int(full_dataset_len * dataset_ratio)
+        if shuffle:
+            data_idx = [*range(full_dataset_len)]
+            random.shuffle(data_idx)
+        else:
+            data_idx = [*range(dataset)]
+
+        self.data_idx = data_idx[:self.dataset_len]
+        print(f'total len dataset {self.dataset_len}')
+        self.dataset = dataset
+
+    def __len__(self):
+        return self.dataset_len
+
+    def __getitem__(self, idx):
+        return self.dataset[self.data_idx[idx]]
+
+
 if __name__ == '__main__':
     from transformers import AutoTokenizer
     from torch.utils.data import DataLoader

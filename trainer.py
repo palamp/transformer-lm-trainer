@@ -1,6 +1,6 @@
 from transformers import AutoModelForCausalLM, AutoConfig, AutoModelForSeq2SeqLM, AutoTokenizer, PreTrainedModel, PreTrainedTokenizer, default_data_collator, set_seed
 from transformers import Trainer, TrainingArguments, TrainerCallback, TrainerState, TrainerControl
-from dataset.dataset import EOSSplitTextDataset
+from dataset.dataset import EOSSplitTextDataset, CloneDataset
 from omegaconf import OmegaConf
 import os
 from typing import List
@@ -73,11 +73,11 @@ class CustomTrainer(Trainer):
                                      for p in self.model.parameters() if p.requires_grad)
             print(f'Total train param: {total_train_params:,}')
         self.eval_steps = self.config.training_args.pop('eval_steps')
-        train_dataset = self._get_train_dataset()
-        eval_dataset = self._get_eval_dataset()
+        self.train_dataset = self._get_train_dataset()
+        self.eval_dataset = self._get_eval_dataset()
         training_args = TrainingArguments(
             do_train=True, do_eval=True, evaluation_strategy='steps', output_dir=result_dir, dataloader_num_workers=0, learning_rate=self.config.lr, eval_steps=self.eval_steps, **self.config.training_args)
-        super().__init__(self.model, training_args, default_data_collator, train_dataset, eval_dataset,
+        super().__init__(self.model, training_args, default_data_collator, self.train_dataset, self.eval_dataset,
                          self.tokenizer, callbacks=[generation_callback], **config.get('trainer_args', {}))
 
     def _set_tokenizer(self):
@@ -94,8 +94,9 @@ class CustomTrainer(Trainer):
         data_config = self.config.data
         test_path = data_config.get('test_path', None)
         if test_path is None:
-            self.eval_steps = 10_000_000
-            return None
+            eval_dataset = CloneDataset(self.train_dataset)
+            self.eval_steps = 10
+            return eval_dataset
         eval_dataset = EOSSplitTextDataset(test_path, tokenizer_name=self.config.get(
             'tokenizer_name', self.config.model_name), arch='prefix_lm' if self.is_enc_dec else 'clm', **data_config.get('config', {}))
         return eval_dataset
