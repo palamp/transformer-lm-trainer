@@ -95,7 +95,7 @@ class CustomTrainer(Trainer):
         test_path = data_config.get('test_path', None)
         if test_path is None:
             eval_dataset = CloneDataset(self.train_dataset)
-            self.eval_steps = 10
+            self.eval_steps = 10_000_000
             return eval_dataset
         eval_dataset = EOSSplitTextDataset(test_path, tokenizer_name=self.config.get(
             'tokenizer_name', self.config.model_name), arch='prefix_lm' if self.is_enc_dec else 'clm', **data_config.get('config', {}))
