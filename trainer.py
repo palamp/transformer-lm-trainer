@@ -8,7 +8,7 @@ import os
 from typing import List, Optional, Union
 import shutil
 from utils_v2 import get_result_dir, on_after_train, is_main_process
-os.environ['TOKENIZERS_PARALLELISM'] = 'false'
+# os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 set_seed(42)
 
 
@@ -26,6 +26,7 @@ class GenerationCallback(TrainerCallback):
         print('Will visualize this on going')
         print(self.log_example)
 
+    @torch.no_grad()
     def _generate(self, model: PreTrainedModel, tokenizer: PreTrainedTokenizer, text: Union[str, torch.Tensor]) -> str:
         if isinstance(text, str):
             inputs = tokenizer.encode(text, return_tensors="pt")
@@ -33,7 +34,7 @@ class GenerationCallback(TrainerCallback):
             inputs = text
         generate_preset = {'no_repeat_ngram_size': 4, 'do_sample': True, 'top_p': 0.95, 'temperature': 0.5,
                            'top_k': 4, 'repetition_penalty': 1.03, 'penalty_alpha': 0.6,
-                           } if self.generate_preset == 'sample' else {'num_beams': 5, 'early_stopping': True}
+                           } if self.generate_preset == 'sample' else {}
         outputs = model.generate(inputs.to(model.device),
                                  **generate_preset,
                                  **self.generate_config.get('config', {})
@@ -56,7 +57,7 @@ class GenerationCallback(TrainerCallback):
         with open(write_path, 'a') as w:
             w.write(f'[generation]: {generated_text}\n')
 
-    def _generate_write_from_batch(self, model, tokenizer, dataloader, write_path, n=2):
+    def _generate_write_from_batch(self, model, tokenizer, dataloader, write_path, n=1):
         dataloader = iter(dataloader)
         for _ in range(n):
             batch = next(dataloader)
@@ -91,7 +92,7 @@ class GenerationCallback(TrainerCallback):
 class CustomTrainer(Trainer):
     def __init__(self, config, result_dir: str):
         self.config = config
-        self.is_enc_dec = 't5' in self.config.model_name
+        self.is_enc_dec = 't5' in self.config.model_name or 'm2m' in self.config.model_name or 'nllb-200' in self.config.model_name
         model_config = AutoConfig.from_pretrained(self.config.model_name)
         model_config.gradient_checkpointing = True
         model_config.use_cache = False
@@ -126,7 +127,7 @@ class CustomTrainer(Trainer):
         if dataset_type == 'clm':
             return EOSSplitTextDataset(path, tokenizer_name=self.config.get('tokenizer_name', self.config.model_name), arch='prefix_lm' if self.is_enc_dec else 'clm', **data_config.get('config', {}))
         elif dataset_type == 'paraphase_json':
-            return JSONDataset(path, tokenizer_name=self.config.get('tokenizer_name', self.config.model_name))
+            return JSONDataset(path, tokenizer_name=self.config.get('tokenizer_name', self.config.model_name), **data_config.get('config', {}))
         else:
             raise NotImplementedError()
 

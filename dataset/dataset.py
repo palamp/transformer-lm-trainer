@@ -25,6 +25,9 @@ class EOSSplitTextDataset(Dataset):
             print('override_pad_token', override_pad_token)
             if override_pad_token:
                 self.tokenizer.pad_token = self.tokenizer.eos_token
+        elif 'm2m' in tokenizer_name or 'nllb-200' in tokenizer_name:
+            self.tokenizer.src_lang = "th"
+            self.tokenizer.tgt_lang = 'th'
         print('self.tokenizer.pad_token_id', self.tokenizer.pad_token_id)
         self.arch = arch
         with open(text_file) as f:
@@ -126,6 +129,9 @@ class JSONDataset(Dataset):
         self.data = data
         self.max_length = max_length
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+        if 'm2m' in tokenizer_name or 'nllb-200' in tokenizer_name:
+            self.tokenizer.src_lang = "th"
+            self.tokenizer.tgt_lang = 'th'
 
     def _remove_batch(self, data):
         new_data = {}
@@ -143,8 +149,8 @@ class JSONDataset(Dataset):
 
     def __getitem__(self, idx):
         row = self.data[idx]
-        inputs = "Paraphase: " + row['backTH'] + ":" + row['en']
-        labels = row['original']
+        inputs = "Translate: " + row['backTH'] + "Original:" + row['en']
+        labels = 'Paraphase: ' + row['original']
         inputs_tokens = self.tokenizer.encode_plus(
             inputs, padding='max_length', max_length=self.max_length, return_tensors='pt', return_attention_mask=True, truncation=True)
         labels_tokens = self.tokenizer.encode_plus(
