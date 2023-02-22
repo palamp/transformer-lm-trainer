@@ -4,6 +4,7 @@ from typing import Optional
 import random
 from tqdm import tqdm
 import torch
+import json
 
 
 class EOSSplitTextDataset(Dataset):
@@ -97,6 +98,7 @@ class CloneDataset(Dataset):
     def __init__(self, dataset: Dataset, dataset_ratio=0.01, shuffle=True) -> None:
         super().__init__()
         full_dataset_len = len(dataset)
+        print(f'total original dataset len: {full_dataset_len}')
         self.dataset_len = int(full_dataset_len * dataset_ratio)
         if shuffle:
             data_idx = [*range(full_dataset_len)]
@@ -105,7 +107,7 @@ class CloneDataset(Dataset):
             data_idx = [*range(dataset)]
 
         self.data_idx = data_idx[:self.dataset_len]
-        print(f'total len dataset {self.dataset_len}')
+        print(f'total len dataset: {self.dataset_len}')
         self.dataset = dataset
 
     def __len__(self):
@@ -115,14 +117,55 @@ class CloneDataset(Dataset):
         return self.dataset[self.data_idx[idx]]
 
 
+class JSONDataset(Dataset):
+
+    def __init__(self, text_file: str, tokenizer_name: str, max_length=280, calc_loss_on_pad=True) -> None:
+        with open(text_file) as f:
+            data = json.load(f)
+        self.calc_loss_on_pad = calc_loss_on_pad
+        self.data = data
+        self.max_length = max_length
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+
+    def _remove_batch(self, data):
+        new_data = {}
+        for k in data.keys():
+            new_data[k] = data[k][0]
+        return new_data
+
+    def _get_labels(self, labels_tokens):
+        if self.calc_loss_on_pad:
+            return labels_tokens
+        return torch.where(labels_tokens == self.tokenizer.pad_token_id, -100, labels_tokens)
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        row = self.data[idx]
+        inputs = "Paraphase: " + row['backTH'] + ":" + row['en']
+        labels = row['original']
+        inputs_tokens = self.tokenizer.encode_plus(
+            inputs, padding='max_length', max_length=self.max_length, return_tensors='pt', return_attention_mask=True, truncation=True)
+        labels_tokens = self.tokenizer.encode_plus(
+            labels, padding='max_length', max_length=self.max_length, return_tensors='pt', truncation=True, return_attention_mask=False)['input_ids']
+        tokens = {'input_ids': inputs_tokens['input_ids'],
+                  'attention_mask': inputs_tokens['attention_mask']}
+        tokens['labels'] = self._get_labels(labels_tokens)
+        # {'input_ids': tensor, 'attention_mask': tensor, 'labels': tensor}
+        return self._remove_batch(tokens)
+
+
 if __name__ == '__main__':
     from transformers import AutoTokenizer
     from torch.utils.data import DataLoader
     import torch
     from omegaconf import OmegaConf
     config = OmegaConf.load('config/config_clm.yaml')
-    dataset = EOSSplitTextDataset(
-        '/home/kunato/language-model-agents/inst_v1_test.txt', 'facebook/xglm-1.7B', arch='clm', **config.data.config)
+    dataset = JSONDataset(
+        'filelist/review_train_data_translated.json', 'google/mt5-large', max_length=512)
+    # dataset = EOSSplitTextDataset(
+    #     '/home/kunato/language-model-agents/inst_v1_test.txt', 'facebook/xglm-1.7B', arch='clm', **config.data.config)
     loader = DataLoader(dataset, shuffle=False)
     print('total', len(dataset))
     for b in loader:

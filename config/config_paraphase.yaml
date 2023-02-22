@@ -1,0 +1,28 @@
+data:
+  train_path: filelist/review_train_data_translated.json
+  max_length: 512
+
+dataset_type: paraphase_json
+
+
+training_args:
+  bf16: True
+  num_train_epochs: 10
+  logging_steps: 10
+  eval_steps: 200
+  save_steps: 1000
+  gradient_accumulation_steps: 1
+  per_device_train_batch_size: 16
+  warmup_steps: 5
+  deepspeed: 'config/ds_b16_config.json' # need to run using deepspeed
+
+generate:
+  config:
+    max_length: 128
+  generate_preset: beam
+
+model_name: google/mt5-base
+tokenizer_name: google/mt5-base
+
+gpus: 1
+lr: 5e-5

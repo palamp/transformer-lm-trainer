@@ -1,9 +1,11 @@
+import torch
 from transformers import AutoModelForCausalLM, AutoConfig, AutoModelForSeq2SeqLM, AutoTokenizer, PreTrainedModel, PreTrainedTokenizer, default_data_collator, set_seed
 from transformers import Trainer, TrainingArguments, TrainerCallback, TrainerState, TrainerControl
-from dataset.dataset import EOSSplitTextDataset, CloneDataset
+from dataset.dataset import EOSSplitTextDataset, CloneDataset, JSONDataset
 from omegaconf import OmegaConf
+from torch.utils.data import DataLoader
 import os
-from typing import List
+from typing import List, Optional, Union
 import shutil
 from utils_v2 import get_result_dir, on_after_train, is_main_process
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
@@ -18,38 +20,72 @@ class GenerationCallback(TrainerCallback):
         self.result_dir = result_dir
         self.generate_config = self.config.get('generate', {})
         self.log_example: List[str] = self.generate_config.get('examples', [])
+        self.generate_preset = self.generate_config.get(
+            'generate_preset', 'sample')
 
         print('Will visualize this on going')
         print(self.log_example)
 
-    def _generate(self, model: PreTrainedModel, tokenizer: PreTrainedTokenizer, text: str) -> str:
-        inputs = tokenizer.encode(text, return_tensors="pt")
+    def _generate(self, model: PreTrainedModel, tokenizer: PreTrainedTokenizer, text: Union[str, torch.Tensor]) -> str:
+        if isinstance(text, str):
+            inputs = tokenizer.encode(text, return_tensors="pt")
+        else:
+            inputs = text
+        generate_preset = {'no_repeat_ngram_size': 4, 'do_sample': True, 'top_p': 0.95, 'temperature': 0.5,
+                           'top_k': 4, 'repetition_penalty': 1.03, 'penalty_alpha': 0.6,
+                           } if self.generate_preset == 'sample' else {'num_beams': 5, 'early_stopping': True}
         outputs = model.generate(inputs.to(model.device),
-                                 no_repeat_ngram_size=4,
-                                 do_sample=True,
-                                 top_p=0.95,
-                                 temperature=0.5,
-                                 top_k=4,
-                                 repetition_penalty=1.03,
-                                 penalty_alpha=0.6,
-                                 eos_token_id=tokenizer.eos_token_id,
+                                 **generate_preset,
                                  **self.generate_config.get('config', {})
                                  )
-        decode_text = tokenizer.decode(
-            outputs[0], skip_special_tokens=True)
+        decode_text = self._decode_and_remove_newline(tokenizer, outputs)
         return decode_text
 
-    def on_log(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, model: PreTrainedModel, tokenizer: PreTrainedTokenizer, logs=None, **kwargs):
+    def _decode_and_remove_newline(self, tokenizer, tensor):
+        if len(tensor.shape) == 2:
+            tensor = tensor[0]
+        decode_text = tokenizer.decode(
+            tensor, skip_special_tokens=True)
+        remove_newline_decode_text = ' '.join(
+            decode_text.split('\n'))
+        return remove_newline_decode_text
+
+    def _generate_write_from_example(self, model, tokenizer, example, write_path):
+        generated_text = self._generate(
+            model, tokenizer, example)
+        with open(write_path, 'a') as w:
+            w.write(f'[generation]: {generated_text}\n')
+
+    def _generate_write_from_batch(self, model, tokenizer, dataloader, write_path, n=2):
+        dataloader = iter(dataloader)
+        for _ in range(n):
+            batch = next(dataloader)
+            input_ids = batch['input_ids']
+            labels = batch['labels']
+
+            inputs_text = self._decode_and_remove_newline(tokenizer, input_ids)
+            labels_text = self._decode_and_remove_newline(tokenizer, labels)
+            generated_text = self._generate(model, tokenizer, input_ids)
+
+            with open(write_path, 'a') as w:
+                w.write(f'[input]: {inputs_text}\n')
+                w.write(f'[gt]: {labels_text}\n')
+                w.write(f'[generation]: {generated_text}\n')
+
+    def on_log(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, model: PreTrainedModel, tokenizer: PreTrainedTokenizer, train_dataloader: Optional[DataLoader] = None, **kwargs):
         if state.is_local_process_zero:
             os.makedirs(self.result_dir, exist_ok=True)
-            with open(f'{self.result_dir}/examples.txt', 'a') as w:
+            write_path = f'{self.result_dir}/examples.txt'
+            with open(write_path, 'a') as w:
                 w.write(
                     f'=================={state.global_step}==================\n')
+            if len(self.log_example) > 0:
                 for example in self.log_example:
-                    generated_text = self._generate(model, tokenizer, example)
-                    remove_newline_g_text = ' '.join(
-                        generated_text.split('\n'))
-                    w.write(f'{remove_newline_g_text}\n')
+                    self._generate_write_from_example(
+                        model, tokenizer, example, write_path)
+            elif train_dataloader is not None:
+                self._generate_write_from_batch(
+                    model, tokenizer, train_dataloader, write_path)
 
 
 class CustomTrainer(Trainer):
@@ -84,10 +120,19 @@ class CustomTrainer(Trainer):
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.config.get('tokenizer_name', self.config.model_name))
 
+    def _get_dataset(self, path: str):
+        dataset_type = self.config.get('dataset_type', 'clm')
+        data_config = self.config.data
+        if dataset_type == 'clm':
+            return EOSSplitTextDataset(path, tokenizer_name=self.config.get('tokenizer_name', self.config.model_name), arch='prefix_lm' if self.is_enc_dec else 'clm', **data_config.get('config', {}))
+        elif dataset_type == 'paraphase_json':
+            return JSONDataset(path, tokenizer_name=self.config.get('tokenizer_name', self.config.model_name))
+        else:
+            raise NotImplementedError()
+
     def _get_train_dataset(self):
         data_config = self.config.data
-        train_dataset = EOSSplitTextDataset(
-            data_config.train_path, tokenizer_name=self.config.get('tokenizer_name', self.config.model_name), arch='prefix_lm' if self.is_enc_dec else 'clm', **data_config.get('config', {}))
+        train_dataset = self._get_dataset(data_config.train_path)
         return train_dataset
 
     def _get_eval_dataset(self):
@@ -97,8 +142,7 @@ class CustomTrainer(Trainer):
             eval_dataset = CloneDataset(self.train_dataset)
             self.eval_steps = 10_000_000
             return eval_dataset
-        eval_dataset = EOSSplitTextDataset(test_path, tokenizer_name=self.config.get(
-            'tokenizer_name', self.config.model_name), arch='prefix_lm' if self.is_enc_dec else 'clm', **data_config.get('config', {}))
+        eval_dataset = self._get_dataset(test_path)
         return eval_dataset
 
 
