@@ -19,6 +19,4 @@ training_args:
 model_name: /home/kunato/instruct-transformer/pretrained/mt5_lm
 tokenizer_name: google/mt5-large
 
-gpus: 1
-
 lr: 5e-4

@@ -51,27 +51,25 @@ class GenerationCallback(TrainerCallback):
             decode_text.split('\n'))
         return remove_newline_decode_text
 
-    def _generate_write_from_example(self, model, tokenizer, example, write_path):
+    def _generate_write_from_example(self, model, tokenizer, example, w):
         generated_text = self._generate(
             model, tokenizer, example)
-        with open(write_path, 'a') as w:
-            w.write(f'[generation]: {generated_text}\n')
+        w.write(f'[generation]: {generated_text}\n')
 
-    def _generate_write_from_batch(self, model, tokenizer, dataloader, write_path, n=1):
+    def _generate_write_from_batch(self, model, tokenizer, dataloader, w, n=1):
         dataloader = iter(dataloader)
         for _ in range(n):
             batch = next(dataloader)
-            input_ids = batch['input_ids']
-            labels = batch['labels']
+            input_ids = batch['input_ids'][:1, ...]
+            labels = batch['labels'][:1, ...]
 
             inputs_text = self._decode_and_remove_newline(tokenizer, input_ids)
             labels_text = self._decode_and_remove_newline(tokenizer, labels)
             generated_text = self._generate(model, tokenizer, input_ids)
 
-            with open(write_path, 'a') as w:
-                w.write(f'[input]: {inputs_text}\n')
-                w.write(f'[gt]: {labels_text}\n')
-                w.write(f'[generation]: {generated_text}\n')
+            w.write(f'[input]: {inputs_text}\n')
+            w.write(f'[gt]: {labels_text}\n')
+            w.write(f'[generation]: {generated_text}\n')
 
     def on_log(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, model: PreTrainedModel, tokenizer: PreTrainedTokenizer, train_dataloader: Optional[DataLoader] = None, **kwargs):
         if state.is_local_process_zero:
@@ -80,13 +78,13 @@ class GenerationCallback(TrainerCallback):
             with open(write_path, 'a') as w:
                 w.write(
                     f'=================={state.global_step}==================\n')
-            if len(self.log_example) > 0:
-                for example in self.log_example:
-                    self._generate_write_from_example(
-                        model, tokenizer, example, write_path)
-            elif train_dataloader is not None:
-                self._generate_write_from_batch(
-                    model, tokenizer, train_dataloader, write_path)
+                if len(self.log_example) > 0:
+                    for example in self.log_example:
+                        self._generate_write_from_example(
+                            model, tokenizer, example, w)
+                elif train_dataloader is not None:
+                    self._generate_write_from_batch(
+                        model, tokenizer, train_dataloader, w)
 
 
 class CustomTrainer(Trainer):
@@ -118,8 +116,12 @@ class CustomTrainer(Trainer):
                          self.tokenizer, callbacks=[generation_callback], **config.get('trainer_args', {}))
 
     def _set_tokenizer(self):
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            self.config.get('tokenizer_name', self.config.model_name))
+        tokenizer_name = self.config.get(
+            'tokenizer_name', self.config.model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+        if 'm2m' in tokenizer_name or 'nllb-200' in tokenizer_name:
+            self.tokenizer.src_lang = "th"
+            self.tokenizer.tgt_lang = 'th'
 
     def _get_dataset(self, path: str):
         dataset_type = self.config.get('dataset_type', 'clm')

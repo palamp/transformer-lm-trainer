@@ -8,9 +8,9 @@ dataset_type: paraphase_json
 training_args:
   bf16: True
   num_train_epochs: 10
-  logging_steps: 10
+  logging_steps: 100
   eval_steps: 200
-  save_steps: 1000
+  save_steps: 2000
   gradient_accumulation_steps: 1
   per_device_train_batch_size: 16
   warmup_steps: 5
@@ -22,5 +22,4 @@ generate:
 model_name: facebook/m2m100_418M
 tokenizer_name: facebook/m2m100_418M
 
-gpus: 1
 lr: 5e-5
