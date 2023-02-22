@@ -12,14 +12,16 @@ training_args:
   eval_steps: 200
   save_steps: 1000
   gradient_accumulation_steps: 1
-  per_device_train_batch_size: 16
+  per_device_train_batch_size: 8
   warmup_steps: 5
-  deepspeed: 'config/ds_b16_config.json' # need to run using deepspeed
+  # deepspeed: 'config/ds_b16_config.json' # need to run using deepspeed
 
 generate:
   generate_preset: greedy
+  config:
+    max_length: 200
 
-model_name: facebook/m2m100_418M
-tokenizer_name: facebook/m2m100_418M
+model_name: google/mt5-base
+tokenizer_name: google/mt5-base
 
 lr: 5e-5
