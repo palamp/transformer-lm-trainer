@@ -45,10 +45,8 @@ class GenerationCallback(TrainerCallback):
     def _decode_and_remove_newline(self, tokenizer, tensor):
         if len(tensor.shape) == 2:
             tensor = tensor[0]
-        decode_text = tokenizer.decode(
-            tensor, skip_special_tokens=True)
-        remove_newline_decode_text = ' '.join(
-            decode_text.split('\n'))
+        decode_text = tokenizer.decode(tensor, skip_special_tokens=True)
+        remove_newline_decode_text = ' '.join(decode_text.split('\n'))
         return remove_newline_decode_text
 
     def _generate_write_from_example(self, model, tokenizer, example, w):

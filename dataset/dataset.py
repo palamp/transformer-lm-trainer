@@ -122,9 +122,10 @@ class CloneDataset(Dataset):
 
 class JSONDataset(Dataset):
 
-    def __init__(self, text_file: str, tokenizer_name: str, max_length=280, calc_loss_on_pad=True) -> None:
+    def __init__(self, text_file: str, tokenizer_name: str, max_length=280, calc_loss_on_pad=True, arch='clm') -> None:
         with open(text_file) as f:
             data = json.load(f)
+        self.arch = arch
         self.calc_loss_on_pad = calc_loss_on_pad
         self.data = data
         self.max_length = max_length
@@ -151,14 +152,20 @@ class JSONDataset(Dataset):
         row = self.data[idx]
         inputs = "Translate: " + row['backTH'] + "Original:" + row['en']
         labels = 'Paraphase: ' + row['original']
-        inputs_tokens = self.tokenizer.encode_plus(
-            inputs, padding='max_length', max_length=self.max_length, return_tensors='pt', return_attention_mask=True, truncation=True)
-        labels_tokens = self.tokenizer.encode_plus(
-            labels, padding='max_length', max_length=self.max_length, return_tensors='pt', truncation=True, return_attention_mask=False)['input_ids']
-        tokens = {'input_ids': inputs_tokens['input_ids'],
-                  'attention_mask': inputs_tokens['attention_mask']}
-        tokens['labels'] = self._get_labels(labels_tokens)
-        # {'input_ids': tensor, 'attention_mask': tensor, 'labels': tensor}
+        if self.arch == 'encdec':
+            inputs_tokens = self.tokenizer.encode_plus(
+                inputs, padding='max_length', max_length=self.max_length, return_tensors='pt', return_attention_mask=True, truncation=True)
+            labels_tokens = self.tokenizer.encode_plus(
+                labels, padding='max_length', max_length=self.max_length, return_tensors='pt', truncation=True, return_attention_mask=False)['input_ids']
+            tokens = {'input_ids': inputs_tokens['input_ids'],
+                    'attention_mask': inputs_tokens['attention_mask']}
+            tokens['labels'] = self._get_labels(labels_tokens)
+        elif self.arch == 'clm':
+            tokens = self.tokenizer.encode_plus(
+                inputs + labels, padding='max_length', max_length=self.max_length, return_tensors='pt', return_attention_mask=True, truncation=True)
+            tokens['labels'] = self._get_labels(tokens['input_ids'])
+        else:
+            raise NotImplementedError()
         return self._remove_batch(tokens)
 
 
@@ -178,4 +185,6 @@ if __name__ == '__main__':
         print(b)
         print(b['input_ids'].sum())
         print(torch.count_nonzero(b['attention_mask']))
+        d = dataset.tokenizer.decode(b['input_ids'][0])
+        print(d)
         break

@@ -1,0 +1,34 @@
+data:
+  train_path: filelist/review_train_data_translated.json
+  config:
+    max_length: 768
+    calc_loss_on_pad: False
+
+dataset_type: paraphase_json
+  
+training_args:
+  fp16: True
+  num_train_epochs: 10
+  logging_steps: 20
+  adam_beta1: 0.9
+  adam_beta2: 0.95
+  max_grad_norm: 0.5
+  eval_steps: 200
+  save_steps: 1500
+  # gradient_accumulation_steps: 1
+  # per_device_train_batch_size: 32
+  gradient_accumulation_steps: 1 # facebook/xglm-1.7B
+  per_device_train_batch_size: 8 # facebook/xglm-1.7B
+  warmup_steps: 20
+  deepspeed: 'config/ds_offload_config.json' # need to run using deepspeed
+
+generate:
+  config:
+    max_new_tokens: 256
+
+# model_name: EleutherAI/pythia-1.4b-deduped
+# model_name: sberbank-ai/mGPT
+model_name: facebook/xglm-1.7B
+
+lr: 5e-5 # xglm
+# lr: 5e-6
