@@ -74,19 +74,21 @@ class GenerationCallback(TrainerCallback):
 
     def on_log(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, model: PreTrainedModel, tokenizer: PreTrainedTokenizer, train_dataloader: Optional[DataLoader] = None, **kwargs):
         if state.is_local_process_zero:
-            os.makedirs(self.result_dir, exist_ok=True)
-            write_path = f'{self.result_dir}/examples.txt'
-            with open(write_path, 'a') as w:
-                w.write(
-                    f'=================={state.global_step}==================\n')
-                if len(self.log_example) > 0:
-                    for example in self.log_example:
-                        self._generate_write_from_example(
-                            model, tokenizer, example, w)
-                elif train_dataloader is not None:
-                    self._generate_write_from_batch(
-                        model, tokenizer, train_dataloader, w)
-
+            try:
+                os.makedirs(self.result_dir, exist_ok=True)
+                write_path = f'{self.result_dir}/examples.txt'
+                with open(write_path, 'a') as w:
+                    w.write(
+                        f'=================={state.global_step}==================\n')
+                    if len(self.log_example) > 0:
+                        for example in self.log_example:
+                            self._generate_write_from_example(
+                                model, tokenizer, example, w)
+                    elif train_dataloader is not None:
+                        self._generate_write_from_batch(
+                            model, tokenizer, train_dataloader, w)
+            except Exception as e:
+                print(f'skip generation @ {state.global_step}')
 
 class CustomTrainer(Trainer):
     def __init__(self, config, result_dir: str):
