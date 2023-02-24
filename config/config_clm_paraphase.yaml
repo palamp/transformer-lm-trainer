@@ -9,7 +9,7 @@ dataset_type: paraphase_json
 training_args:
   fp16: True
   num_train_epochs: 10
-  logging_steps: 20
+  logging_steps: 100
   adam_beta1: 0.9
   adam_beta2: 0.95
   max_grad_norm: 0.5
@@ -17,10 +17,10 @@ training_args:
   save_steps: 1500
   # gradient_accumulation_steps: 1
   # per_device_train_batch_size: 32
-  gradient_accumulation_steps: 1 # facebook/xglm-1.7B
-  per_device_train_batch_size: 8 # facebook/xglm-1.7B
+  gradient_accumulation_steps: 8 # facebook/xglm-1.7B
+  per_device_train_batch_size: 2 # facebook/xglm-1.7B
   warmup_steps: 20
-  deepspeed: 'config/ds_offload_config.json' # need to run using deepspeed
+  deepspeed: 'config/ds_config.json' # need to run using deepspeed
 
 generate:
   config:

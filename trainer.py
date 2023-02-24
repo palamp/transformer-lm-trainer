@@ -20,8 +20,7 @@ class GenerationCallback(TrainerCallback):
         self.result_dir = result_dir
         self.generate_config = self.config.get('generate', {})
         self.log_example: List[str] = self.generate_config.get('examples', [])
-        self.generate_preset = self.generate_config.get(
-            'generate_preset', 'sample')
+        self.generate_preset = self.generate_config.get('generate_preset', 'sample')
 
         print('Will visualize this on going')
         print(self.log_example)
@@ -63,6 +62,10 @@ class GenerationCallback(TrainerCallback):
 
             inputs_text = self._decode_and_remove_newline(tokenizer, input_ids)
             labels_text = self._decode_and_remove_newline(tokenizer, labels)
+
+            if self.config.get('dataset_type', 'clm') == 'paraphase_json':
+                input_ids = inputs_text.split('Paraphase:')[0] + "Paraphase:"
+            
             generated_text = self._generate(model, tokenizer, input_ids)
 
             w.write(f'[input]: {inputs_text}\n')
