@@ -3,6 +3,7 @@ import os
 from transformers import (
     AutoConfig,
     AutoModelForCausalLM,
+    AutoModelForSeq2SeqLM,
     AutoTokenizer,
     Trainer,
     TrainingArguments,
@@ -22,12 +23,16 @@ class CustomTrainer(Trainer):
     def __init__(self, config):
         self.config = config
 
-        model_config = AutoConfig.from_pretrained(self.config.model_name)
+        model_config = AutoConfig.from_pretrained(self.config.model.name)
         model_config.gradient_checkpointing = True
         model_config.use_cache = False
 
-        model = AutoModelForCausalLM.from_pretrained(self.config.model_name, config=model_config)
-        tokenizer = AutoTokenizer.from_pretrained(self.config.get("tokenizer_name", self.config.model_name))
+        if self.config.model.type == "enc_dec":
+            model = AutoModelForSeq2SeqLM.from_pretrained(self.config.model.name, config=model_config)
+        elif self.config.model.type == "dec_only":
+            model = AutoModelForCausalLM.from_pretrained(self.config.model.name, config=model_config)
+
+        tokenizer = AutoTokenizer.from_pretrained(self.config.model.get("tokenizer", self.config.model.name))
 
         self.train_dataset = self._get_train_dataset()
         self.eval_dataset = self._get_eval_dataset()
