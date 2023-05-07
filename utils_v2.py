@@ -1,17 +1,16 @@
-import glob
 import math
 import os
+from pathlib import Path
 
 
-def get_result_dir(lightning_logs_dir='results'):
-    log_dir = glob.glob(f'{lightning_logs_dir}/**/config.yaml')
-    log_dir_version = list(
-        map(lambda x: int(x.split('/')[-2].replace('version_', '')), log_dir))
+def get_result_dir(lightning_logs_dir="./results"):
+    log_dir = Path(lightning_logs_dir).glob("**/config.yaml")
+    log_dir_version = list(map(lambda x: int(x.parent.name), log_dir))
     if len(log_dir_version) != 0:
-        exp_num = '{:0>3d}'.format(max(log_dir_version) + 1)
+        exp_num = "{:0>3d}".format(max(log_dir_version) + 1)
     else:
-        exp_num = '{:0>3d}'.format(1)
-    return f'./results/{exp_num}'
+        exp_num = "{:0>3d}".format(1)
+    return f"{lightning_logs_dir}/{exp_num}"
 
 
 def on_after_train(trainer, train_result):
