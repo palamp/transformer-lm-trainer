@@ -1,0 +1,39 @@
+data:
+  train_path: /content/drive/MyDrive/paraphrase/dataset/train_paraphrase_v2.json
+  test_path: /content/drive/MyDrive/paraphrase/dataset/test_paraphrase_v2.json
+  config:
+    max_length: 500
+
+dataset_type: paraphase_json
+
+training_args:
+  tf32: True
+  num_train_epochs: 2
+  logging_steps: 100
+  eval_steps: 200
+  save_steps: 1000
+  gradient_accumulation_steps: 2
+  per_device_train_batch_size: 8
+  warmup_steps: 5
+  learning_rate: 1e-5
+  dataloader_num_workers: 2
+  # deepspeed: "config/ds_b16_config.json" # need to run using deepspeed
+
+generate:
+  generate_preset: sample
+  config:
+    max_length: 500
+    # max_new_tokens: 250
+    num_return_sequences: 1
+  examples:
+    - <s><TH_CLS>ร้านอาหารเหล่านี้เป็นร้านอาหารที่เติบโตมากมันเป็นสิ่งที่ชัดเจนที่คุณไป มันเป็นสิ่งที่เห็นได้ชัดว่าร้านค้าเหล่านี้เปิดมากและฐานเป็นร้านอาหารขนาดเล็กและขนาดกลางในส่วนเล็ก<EN_CLS>These restaurants are a very growing restaurant, it’s clear where you go. It’s clear that these stores are open in a lot and the base is a small and medium-sized restaurant in a little proportion.<PP_CLS>ร้านอาหารพวกนี้เป็นร้านอาหารที่มีการเติบโตเป็นอย่างมาก เห็นได้จากไม่ว่าจะเดินไปที่ไหน จะเห็นร้านพวกนี้เปิดอยู่เป็นจำนวนมาก และทางซีกัลเองมีฐานที่เป็นร้านอาหารทั่วไปในระดับ SME ในสัดส่วนไม่มากนัก</s></s>
+    - <s><TH_CLS>สําหรับการถอดฝาปิดด้านหลังต้องใช้ปุ่มด้านสีทองฝาปิดด้านหลังจะถอดออกไปยังขอบของเครื่อง ในด้านหลัง microSD สนับสนุนถึง 128 GB microSIM และแบตเตอรี่ 3000 mAh ที่สามารถถอดออกได้ด้วยตัวเอง<EN_CLS>For removal of the back caps, the gold-colored side button is required. The back caps are removed to the edge of the machine. Inside the back microSD supports up to 128 GB, microSIM and a 3000 mAh battery that can be removed by yourself.<PP_CLS>สำหรับการถอดฝาหลังต้องใช้วัตถุปลายแหลมจิ้มปุ่มสีทองด้านข้าง ให้ฝาเด้งออกมาเป็นขอบเครื่องให้แกะได้ ภายในด้านหลัง MicroSD ที่รองรับสูงสุด 128 GB, MicroSIM และแบตเตอรี่ขนาด 3000 mAh ซึ่งสามารถถอดเปลี่ยนได้เอง</s></s>
+    - <s><TH_CLS>สหภาพยุโรปเป็นเงินทุนการศึกษาระดับปริญญาเอกสําหรับนักศึกษาระดับแคนาดาและต่างประเทศในด้านวิทยาศาสตร์สังคมและจิตวิทยาที่มหาวิทยาลัยโยกในปีการศึกษา 2556 และ 2557 ที่จะ<EN_CLS>This fund is a PhD grant for Canadian and international students in the fields of social sciences and humanities at York University in the academic years 2556 and 2557 to come.<PP_CLS>มาเข้าเนื้อหากันนะครับ โดยทุนนี้ก็เป็นทุนในระดับปริญญาเอกนะครับ ซึ่งเปิดให้กับนักศึกษาชาวแคนาดา และ นานาชาติ ในสาขาวิชา สังคมศาสตร์และมนุษยศาสตร์ครับ ที่ York University ในปีการศึกษา 2556 และ 2557 ที่จะถึงนี้ครับ</s></s>
+    - <s><TH_CLS>นอกเหนือจากงานดนตรีของเธอเธอยังมองหาสไตล์สําหรับแฟชั่นของเธอเอง ในปีที่ผ่านมาเธอได้ทําลายแฟชั่นอย่างยิ่งและมีทิศทางที่โดดเด่นมาก เดือนที่ผ่านมา (เดือนมีนาคม) เธอปรากฏบน The Tonight Show ที่แสดงให้เห็นถึง Jimmy Fallon ในชุดจากแบรนด์ Area ด้านบนแบบหัวใจแบบเดี่ยวและมินิเสื้อผ้าคริสตัล แต่ที่โดดเด่นที่สุดคือคู่รองเท้าสีดําขนาดใหญ่ที่ทําให้คนดูโกรธ<EN_CLS>In addition to her musical work, she has also been looking for a style for her own fashion. In recent years, she has been taking a great break in fashion and taking a very prominent turn. Last month (March), she appeared on The Tonight Show Starring Jimmy Fallon in a dress from the Area brand, a heart-shaped single-wheel top and a crystal-dressed mini-gardette. But the most prominent is a big black pair of boots that makes people look crazy.<PP_CLS>นอกจากออกงานเพลงอย่างขันแข็งแล้ว ในด้านแฟชั่นดัวเองค้นหาสไตล์อย่างถึงแก่นเช่นเดียวกัน และช่วงปีล่าสุดต้องยอมรับว่าแฟชั่นของเธอกระโดดขึ้นมาไกลและนำหน้ามากทีเดียว เมื่อเดือนที่แล้ว (มีนาคม) เธอปรากฏตัวในรายการ The Tonight Show Starring Jimmy Fallon ในชุดจากแบรนด์ Area เป็นท็อปสายเดี่ยวรูปหัวใจและมินิสเกิร์ตแต่งคริสตัล แต่ที่โดดเด่นสุดๆ เห็นจะเป็นรองเท้าบู๊ตคู่บิ๊กเบิ้มสีดำที่ทำเอาคนดูต้องร้องว้าว</s></s>
+    - <s><TH_CLS>ในช่วงกลางเดือนตุลาคมมีกระแสทางสังคมและอื่น ๆ เกี่ยวกับการใช้ใหม่ไอศเก่าเพื่อให้บริการลูกค้าต่อไปคนอื่น ๆ ใช้ท่ออีกครั้ง นี่ไม่ใช่ความผิดพลาดจริงๆ แต่คําถามเกิดขึ้นเกี่ยวกับอันตรายต่อร่างกาย ความรุนแรงของปัญหาคืออะไร เราจะพูดคุยเกี่ยวกับครั้งนี้<EN_CLS>In mid-October, there was a social current, and so on, about reusing old ice for serving the next customer, the other used the tube again. This is not really a mistake, but the question arises about the body hazard. What is the severity of the problem. We will talk about this time.<PP_CLS>เมื่อกลางเดือนตุลาคมที่ผ่านมามีกระแสระอุในโลกโซเชียลฯ อีกครั้งเกี่ยวกับการนำน้ำแข็งเก่ากลับมาใช้ใหม่พร้อมเสิร์ฟให้ลูกค้าคนถัดไปแถมใช้หลอดซ้ำอีกด้วย เรื่องนี้ไม่รู้จริงเท็จอย่างไร แต่ประเด็นคำถามที่เกิดขึ้นเกี่ยวกับเรื่องของอันตรายต่อร่างกายนั้น รุนแรงระดับไหนอย่างไร คือเรื่องที่เราจะมาพูดกันในครั้งนี้</s></s>
+    - <s><TH_CLS>งานนี้เปิดนักเรียนที่มีความสามารถหรือสร้างสรรค์จากทั่วโลกเพื่อแบ่งปันวิธีของพวกเขาในการแก้ปัญหาและเปิดโอกาสในการสร้างทรัพยากรดิจิตอลขนาดใหญ่ ด้วยความรู้จากผู้ประกอบการ Bertelsmann ที่มีประสบการณ์เกี่ยวกับแนวคิดทางธุรกิจ<EN_CLS>This job opens up talented or creative students from around the world to share their ways to address challenges and open up opportunities to create large digital resources. With knowledge from experienced Bertelsmann entrepreneurs on business concepts.<PP_CLS>งานนี้เปิดรับนักศึกษาจากทั่วโลกที่มีพรสวรรค์หรือความคิดสร้างสรรค์เพื่อร่วมหาทางรับมือกับความท้าทายและเปิดโอกาสในการสร้างแหล่งข้อมูลดิจิตอลขนาดใหญ่ พร้อมรับความรู้จากผู้ประกอบการ Bertelsmann ที่มีประสบการณ์เกี่ยวกับแนวคิดธุรกิจ</s></s>
+
+model:
+  name: facebook/xglm-1.7B
+  arch: dec_only
+  tokenizer: facebook/xglm-1.7B
