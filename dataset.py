@@ -1,20 +1,20 @@
 import json
 import random
-from typing import Optional
+from typing import Optional, Union
 
 import torch
 from torch.utils.data import Dataset
 from tqdm import tqdm
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
 
 class EOSSplitTextDataset(Dataset):
     def __init__(
         self,
         text_file: str,
-        tokenizer_name: str,
+        tokenizer: PreTrainedTokenizerBase,
         max_length=280,
-        arch="clm",
+        arch="dec_only",
         split_kw: Optional[str] = None,
         override_pad_token=True,
         calc_loss_on_pad=True,
@@ -22,28 +22,31 @@ class EOSSplitTextDataset(Dataset):
         super().__init__()
         self.max_length = max_length
         self.calc_loss_on_pad = calc_loss_on_pad
-        print("max_length", max_length)
-        print("calc_loss_on_pad", self.calc_loss_on_pad)
-        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
-        if "pythia" in tokenizer_name or "gpt" in tokenizer_name:
-            print("set pad_token_id 1")
-            self.tokenizer.pad_token = "<|padding|>"
-        elif "mGPT" in tokenizer_name:
-            self.tokenizer.pad_token = self.tokenizer.eos_token
-        elif "xglm" in tokenizer_name:
-            print("override_pad_token", override_pad_token)
-            if override_pad_token:
-                self.tokenizer.pad_token = self.tokenizer.eos_token
-        elif "m2m" in tokenizer_name or "nllb-200" in tokenizer_name:
-            self.tokenizer.src_lang = "th"
-            self.tokenizer.tgt_lang = "th"
-        print("self.tokenizer.pad_token_id", self.tokenizer.pad_token_id)
+        self.tokenizer = tokenizer
         self.arch = arch
-        with open(text_file) as f:
-            data = f.read()
+
         if self.arch == "prefix_lm":
             self.split_kw = split_kw
 
+        if "pythia" in tokenizer.name_or_path or "gpt" in tokenizer.name_or_path:
+            print("set pad_token_id 1")
+            self.tokenizer.pad_token = "<|padding|>"
+        elif "mGPT" in tokenizer.name_or_path:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+        elif "xglm" in tokenizer.name_or_path:
+            print("override_pad_token", override_pad_token)
+            if override_pad_token:
+                self.tokenizer.pad_token = self.tokenizer.eos_token
+        elif "m2m" in tokenizer.name_or_path or "nllb-200" in tokenizer.name_or_path:
+            self.tokenizer.src_lang = "th"
+            self.tokenizer.tgt_lang = "th"
+
+        print("max_length", self.max_length)
+        print("calc_loss_on_pad", self.calc_loss_on_pad)
+        print("self.tokenizer.pad_token_id", self.tokenizer.pad_token_id)
+
+        with open(text_file) as f:
+            data = f.read()
         entries = data.split("<|endoftext|>")
         self.entries = self._filter_entries(entries)
 
@@ -76,13 +79,11 @@ class EOSSplitTextDataset(Dataset):
     def _get_labels(self, labels_tokens):
         if self.calc_loss_on_pad:
             return labels_tokens
-        return torch.where(
-            labels_tokens == self.tokenizer.pad_token_id, -100, labels_tokens
-        )
+        return torch.where(labels_tokens == self.tokenizer.pad_token_id, -100, labels_tokens)
 
     def __getitem__(self, idx):
         text = self.entries[idx]
-        if self.arch == "clm":
+        if self.arch == "dec_only":
             tokens = self.tokenizer.encode_plus(
                 text,
                 padding="max_length",
@@ -153,10 +154,10 @@ class JSONDataset(Dataset):
     def __init__(
         self,
         text_file: str,
-        tokenizer_name: str,
+        tokenizer: PreTrainedTokenizerBase,
         max_length=280,
         calc_loss_on_pad=True,
-        arch="clm",
+        arch="dec_only",
     ) -> None:
         with open(text_file) as f:
             data = json.load(f)
@@ -164,8 +165,9 @@ class JSONDataset(Dataset):
         self.calc_loss_on_pad = calc_loss_on_pad
         self.data = data
         self.max_length = max_length
-        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
-        if "m2m" in tokenizer_name or "nllb-200" in tokenizer_name:
+        self.tokenizer = tokenizer
+
+        if "m2m" in tokenizer.name_or_path or "nllb-200" in tokenizer.name_or_path:
             self.tokenizer.src_lang = "th"
             self.tokenizer.tgt_lang = "th"
 
@@ -178,18 +180,16 @@ class JSONDataset(Dataset):
     def _get_labels(self, labels_tokens):
         if self.calc_loss_on_pad:
             return labels_tokens
-        return torch.where(
-            labels_tokens == self.tokenizer.pad_token_id, -100, labels_tokens
-        )
+        return torch.where(labels_tokens == self.tokenizer.pad_token_id, -100, labels_tokens)
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, idx):
         row = self.data[idx]
-        inputs = "Translate: " + row["backTH"] + "Original:" + row["en"]
-        labels = "Paraphase: " + row["original"]
-        if self.arch == "encdec":
+        inputs = "<s><TH_CLS>" + row["backTH"] + "<EN_CLS>" + row["en"]
+        labels = "<PP_CLS>" + row["original"] + "</s></s>"
+        if self.arch == "enc_dec":
             inputs_tokens = self.tokenizer.encode_plus(
                 inputs,
                 padding="max_length",
@@ -211,7 +211,7 @@ class JSONDataset(Dataset):
                 "attention_mask": inputs_tokens["attention_mask"],
             }
             tokens["labels"] = self._get_labels(labels_tokens)
-        elif self.arch == "clm":
+        elif self.arch == "dec_only":
             tokens = self.tokenizer.encode_plus(
                 inputs + labels,
                 padding="max_length",
@@ -227,23 +227,31 @@ class JSONDataset(Dataset):
 
 
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+    import numpy as np
     import torch
     from omegaconf import OmegaConf
     from torch.utils.data import DataLoader
+    from tqdm import tqdm
     from transformers import AutoTokenizer
 
-    config = OmegaConf.load("config/config_clm.yaml")
-    dataset = JSONDataset(
-        "filelist/review_train_data_translated.json", "google/mt5-large", max_length=512
+    config = OmegaConf.load("config/config_paraphrase_base.yaml")
+    tokenizer = AutoTokenizer.from_pretrained("facebook/xglm-1.7B")
+    tokenizer.add_special_tokens(
+        {"additional_special_tokens": ["<TH_CLS>", "<EN_CLS>"], "cls_token": "<PP_CLS>"}
     )
+    dataset = JSONDataset("data/train_paraphrase_v2.json", tokenizer, **config.data.get("config", {}))
     # dataset = EOSSplitTextDataset(
     #     '/home/kunato/language-model-agents/inst_v1_test.txt', 'facebook/xglm-1.7B', arch='clm', **config.data.config)
     loader = DataLoader(dataset, shuffle=False)
     print("total", len(dataset))
-    for b in loader:
+    histogram = [0] * 501
+    for b in tqdm(loader):
+        # histogram[torch.count_nonzero(b["attention_mask"]).item()] += 1
         print(b)
-        print(b["input_ids"].sum())
-        print(torch.count_nonzero(b["attention_mask"]))
-        d = dataset.tokenizer.decode(b["input_ids"][0])
-        print(d)
+        print(dataset.tokenizer.decode(b["input_ids"][0]))
         break
+
+    # histogram = np.array(histogram)
+    # plt.bar(np.arange(len(histogram)), histogram)
+    # plt.show()
